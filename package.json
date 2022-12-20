@@ -10,6 +10,6 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon server.js",
-    "build":"webpack" 
+    "build":"heroku/nodejs" 
   }
 }
