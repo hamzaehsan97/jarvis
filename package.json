@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build":"webpack" 
   }
 }
