@@ -14,14 +14,11 @@ app.use(
 const MongoBot = require("./mongo");
 async function start() {
   await MongoBot.init();
-  app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-  });
+  app.listen(process.env.PORT || 3000);
 }
 start();
 
 const auth = require("./routes/auth");
-const port = process.env.PORT || 3000;
 
 app.use(cookieParser());
 
