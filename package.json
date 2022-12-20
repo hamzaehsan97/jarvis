@@ -9,7 +9,6 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon server.js",
-    "build":"heroku/nodejs" 
+    "dev": "nodemon server.js"
   }
 }
