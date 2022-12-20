@@ -29,6 +29,10 @@ const requestTime = function (req, res, next) {
 };
 app.use(requestTime);
 
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
 // Auth at authRoute
 app.get("/auth", auth);
 
