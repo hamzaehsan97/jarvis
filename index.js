@@ -29,9 +29,7 @@ const requestTime = function (req, res, next) {
 };
 app.use(requestTime);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.use("/api/", require("./routes/auth"));
 
 // Auth at authRoute
 app.get("/auth", auth);
