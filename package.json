@@ -11,7 +11,7 @@
     "node": "18.12.1"
   },
   "scripts": {
-    "start": "node dist/server/app/index.js",
+    "start": "node server.js",
     "dev": "nodemon server.js"
   }
 }
