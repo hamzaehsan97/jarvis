@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
-const Users = require("./Users");
-const Notes = require("./Notes");
+const Users = require("./users");
+const Notes = require("./notes");
 require("dotenv").config();
 
 class MongoBot {
