@@ -3,7 +3,7 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-
+const PORT = process.env.PORT || 3000;
 const app = express();
 app.use(
   express.urlencoded({
@@ -11,10 +11,12 @@ app.use(
   })
 );
 
+app.set("port", PORT);
+
 const MongoBot = require("./mongo");
 async function start() {
   await MongoBot.init();
-  app.listen(process.env.PORT || 3000);
+  app.listen(PORT);
 }
 start();
 
