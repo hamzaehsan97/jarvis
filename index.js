@@ -22,14 +22,16 @@ const auth = require("./routes/auth");
 
 app.use(cookieParser());
 
+app.get("/", (req, res) => {
+  res.send("welcome young'n").end();
+});
+
 const requestTime = function (req, res, next) {
   req.requestTime = Date.now();
   console.log("Time:", req.requestTime);
   next();
 };
 app.use(requestTime);
-
-app.use("/api/", require("./routes/auth"));
 
 // Auth at authRoute
 app.get("/auth", auth);
