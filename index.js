@@ -94,7 +94,7 @@ app.post("/texties", cookieJwtAuth, async (req, res) => {
     content: content,
     type: type,
     creationTime: time,
-    email: req.user,
+    email: req.email,
   };
   result = await MongoBot.Notes.addNotes(body);
   res.send(result).end();
