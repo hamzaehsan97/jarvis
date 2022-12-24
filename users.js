@@ -6,7 +6,7 @@ class Users {
   async addUser(user) {
     try {
       const newEntry = await this.collection.insertOne(user);
-      return { status: 200, message: "added new user successfully" };
+      return newEntry;
     } catch (err) {
       return {
         status: 400,
@@ -14,15 +14,20 @@ class Users {
       };
     }
   }
+
   async getUser(email) {
     const query = { email: email };
-    var findings = await this.collection
-      .find(query)
-      .toArray()
-      .catch((error) => {
-        console.error(error);
-      });
-    return findings[0];
+    try {
+      let findings = await this.collection
+        .find(query)
+        .toArray()
+        .catch((error) => {
+          console.error(error);
+        });
+      return findings[0];
+    } catch (err) {
+      throw new err();
+    }
   }
 
   async delUser(email) {
@@ -31,8 +36,22 @@ class Users {
       .catch((error) => {
         console.log(error);
       });
-    console.log("Account deleted successfully" + email);
     return result.deletedCount;
+  }
+
+  async updateUser(email, body) {
+    const result = await this.collection
+      .updateOne(
+        { email: email },
+        {
+          $set: { ...body },
+          $currentDate: { lastModified: true },
+        }
+      )
+      .catch((error) => {
+        throw new Error(error);
+      });
+    return result;
   }
 }
 

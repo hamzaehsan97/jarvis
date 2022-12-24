@@ -49,7 +49,7 @@ const cookieJwtAuth = (req, res, next) => {
   } else {
     try {
       const user = jwt.verify(token, process.env.AUTH_SECRET);
-      req.user = user.email;
+      req.email = user.email;
       next();
     } catch (err) {
       console.log(err);
@@ -93,10 +93,29 @@ app.post("/texties", cookieJwtAuth, async (req, res) => {
   let body = {
     content: content,
     type: type,
-    time: time,
+    creationTime: time,
     email: req.user,
   };
   result = await MongoBot.Notes.addNotes(body);
+  res.send(result).end();
+});
+
+// delete texties based on _id
+app.delete("/texties", cookieJwtAuth, async (req, res) => {
+  const id = req.query.id;
+  result = await MongoBot.Notes.delNote(id);
+  res.json({ notes_deleted: result }).end();
+});
+
+// update texties based on id
+app.patch("/texties", cookieJwtAuth, async (req, res) => {
+  const id = req.query.id;
+  const body = {
+    content: req.query.content ? req.query.content : {},
+    type: req.query.type ? req.query.type : {},
+    lastUpdateTime: req.requestTime,
+  };
+  result = await MongoBot.Notes.updateNote(id, body);
   res.send(result).end();
 });
 
@@ -110,26 +129,55 @@ const createUser = (req, res, next) => {
   next();
 };
 
+// get user by email id
+app.get("/users", cookieJwtAuth, async (req, res) => {
+  let email = "";
+  req.query.email ? (email = req.query.email) : (email = null);
+  console.log("email = ", email);
+  const result = await MongoBot.Users.getUser(email);
+  res.send(result).end();
+});
+
+// Delete user by email
 app.delete("/users", cookieJwtAuth, async (req, res) => {
   if (req.query.email == null) {
     throw new Error("Validation error: email cannot be null.");
   }
-  let result = await MongoBot.Users.delUser(req.query.email);
-  if (result < 1) {
-    res.status(404).json({ message: "User not found" }).end();
-  } else {
-    res
-      .status(200)
-      .json({
-        message: "account deleted successfully",
-        account: req.query.email,
-        num_deleted: result,
-      })
-      .end();
+  try {
+    let result = await MongoBot.Users.delUser(req.query.email);
+    if (result < 1) {
+      res.status(404).json({ message: "User not found" }).end();
+    } else {
+      res
+        .status(200)
+        .json({
+          message: "account deleted successfully",
+          account: req.query.email,
+          num_deleted: result,
+        })
+        .end();
+    }
+  } catch (e) {
+    throw new Error("Internal Service Exception");
   }
 });
 
-//login function
+// Update user by email
+app.patch("/users", cookieJwtAuth, async (req, res) => {
+  const body = {};
+  req.query.first_name ? (body.first_name = req.query.first_name) : {};
+  req.query.last_name ? (body.last_name = req.query.last_name) : {};
+  req.query.password ? (body.password = req.query.password) : {};
+  req.query.phone_number ? (body.phone_number = req.query.phone_number) : {};
+  try {
+    let result = await MongoBot.Users.updateUser(req.email, body);
+    return res.send(result).end();
+  } catch (e) {
+    throw new Error("Internal Service Exception");
+  }
+});
+
+//signup function
 app.post("/users", createUser, async (req, res) => {
   const user = {
     email: req.query.email,
@@ -139,5 +187,5 @@ app.post("/users", createUser, async (req, res) => {
     phone_number: req.query.phone_number,
   };
   let result = await MongoBot.Users.addUser(user);
-  res.status(result.status).json({ message: result.message }).end();
+  res.send(result).end();
 });

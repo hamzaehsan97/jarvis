@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     res
       .cookie("token", token, { maxAge: 10800 })
       .status(200)
-      .send("sign-in successful = " + token)
+      .json({ token: token })
       .end();
   }
 };
