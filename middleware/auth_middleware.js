@@ -10,7 +10,6 @@ exports.validate = (req, res, next) => {
     next();
   } catch (err) {
     console.log(err);
-    console.log("clearing the token");
     res.clearCookie("token").end();
     throw new Error("Access denied exception. Token is expired.");
   }

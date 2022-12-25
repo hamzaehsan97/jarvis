@@ -38,6 +38,9 @@ app.post("/users", users_middleware.createUser, users.create);
 app.get("/users", tokenValidator.validate, users.read);
 app.patch("/users", tokenValidator.validate, users.update);
 app.delete("/users", tokenValidator.validate, users.delete);
+app.patch("/users/create_otp", users.create_otp);
+app.get("/users/verify_otp", users.verify_otp);
+app.patch("/users/update_password", users.update_password);
 app.get("/users/logout", users.logout);
 
 // Auth routes
