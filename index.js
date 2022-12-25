@@ -1,7 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const path = require("path");
-const nodemailer = require("nodemailer");
 const communicate = require("./routes/communicate");
 const auth = require("./routes/auth");
 const users = require("./routes/users");
@@ -45,7 +44,7 @@ app.get("/users/logout", users.logout);
 app.get("/auth", auth);
 
 // Comms routes
-app.get("/comms", communicate.list);
+app.post("/comms", tokenValidator.validate, communicate.send_email);
 
 // Textie routes
 app.post("/texties", tokenValidator.validate, texties.create);

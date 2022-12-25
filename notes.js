@@ -11,6 +11,7 @@ class Notes {
       throw new err();
     }
   }
+
   async findNotes(query) {
     try {
       var notes = await this.collection
@@ -25,6 +26,7 @@ class Notes {
       throw new err();
     }
   }
+
   async delNote(id) {
     try {
       const result = await this.collection
