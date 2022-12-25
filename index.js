@@ -1,7 +1,14 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const path = require("path");
-const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const communicate = require("./routes/communicate");
+const auth = require("./routes/auth");
+const users = require("./routes/users");
+const texties = require("./routes/texties");
+const tokenValidator = require("./middleware/auth_middleware");
+const time_middleware = require("./middleware/time_middleware");
+const users_middleware = require("./middleware/users_middleware");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -20,172 +27,28 @@ async function start() {
 }
 start();
 
-const auth = require("./routes/auth");
-
 app.use(cookieParser());
+app.use(time_middleware.requestTime);
 
 app.get("/", (req, res) => {
   res.send("welcome young'n").end();
 });
 
-const requestTime = function (req, res, next) {
-  req.requestTime = Date.now();
-  console.log("Time:", req.requestTime);
-  next();
-};
-app.use(requestTime);
+// User routes
+app.post("/users", users_middleware.createUser, users.create);
+app.get("/users", tokenValidator.validate, users.read);
+app.patch("/users", tokenValidator.validate, users.update);
+app.delete("/users", tokenValidator.validate, users.delete);
+app.get("/users/logout", users.logout);
 
-// Auth at authRoute
+// Auth routes
 app.get("/auth", auth);
 
-// token validation middleware
-const cookieJwtAuth = (req, res, next) => {
-  const token = req.get("token");
-  if (token === undefined || token === null || token === "") {
-    return res
-      .status(403)
-      .send("Access denied exception. Token is missing")
-      .end();
-  } else {
-    try {
-      const user = jwt.verify(token, process.env.AUTH_SECRET);
-      req.email = user.email;
-      next();
-    } catch (err) {
-      console.log(err);
-      res.clearCookie("token");
-      return res.send("Access denied exception. Token is expired.").end();
-    }
-  }
-};
+// Comms routes
+app.get("/comms", communicate.list);
 
-app.get("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "logout successful" }).end();
-});
-
-// Validatate input for textie post request
-app.use("/texties", (req, res, next) => {
-  if (req.method == "POST") {
-    if (req.query.content == null) {
-      throw new Error("Validation error: content is null.");
-    }
-  }
-  next();
-});
-
-// gets either all texties or by filters
-app.get("/texties", cookieJwtAuth, async (req, res) => {
-  req.query.email = req.user;
-  req.query.content = req.query.content
-    ? { $regex: req.query.content }
-    : { $regex: "" };
-  let query = req.query;
-  let result = await MongoBot.Notes.findNotes(query);
-  res.send(result).end();
-});
-
-// posts texties based on type
-app.post("/texties", cookieJwtAuth, async (req, res) => {
-  const content = req.query.content;
-  const time = req.requestTime;
-  const type = req.query.type ? req.query.type : "note";
-  let body = {
-    content: content,
-    type: type,
-    creationTime: time,
-    email: req.email,
-  };
-  result = await MongoBot.Notes.addNotes(body);
-  res.send(result).end();
-});
-
-// delete texties based on _id
-app.delete("/texties", cookieJwtAuth, async (req, res) => {
-  const id = req.query.id;
-  result = await MongoBot.Notes.delNote(id);
-  res.json({ notes_deleted: result }).end();
-});
-
-// update texties based on id
-app.patch("/texties", cookieJwtAuth, async (req, res) => {
-  const id = req.query.id;
-  const body = {
-    content: req.query.content ? req.query.content : {},
-    type: req.query.type ? req.query.type : {},
-    lastUpdateTime: req.requestTime,
-  };
-  result = await MongoBot.Notes.updateNote(id, body);
-  res.send(result).end();
-});
-
-// create user middleware
-const createUser = (req, res, next) => {
-  if (req.method == "POST") {
-    if (req.query.email == null || req.query.password == null) {
-      throw new Error("Validation error: email or password cannot be null.");
-    }
-  }
-  next();
-};
-
-// get user by email id
-app.get("/users", cookieJwtAuth, async (req, res) => {
-  let email = "";
-  req.query.email ? (email = req.query.email) : (email = null);
-  console.log("email = ", email);
-  const result = await MongoBot.Users.getUser(email);
-  res.send(result).end();
-});
-
-// Delete user by email
-app.delete("/users", cookieJwtAuth, async (req, res) => {
-  if (req.query.email == null) {
-    throw new Error("Validation error: email cannot be null.");
-  }
-  try {
-    let result = await MongoBot.Users.delUser(req.query.email);
-    if (result < 1) {
-      res.status(404).json({ message: "User not found" }).end();
-    } else {
-      res
-        .status(200)
-        .json({
-          message: "account deleted successfully",
-          account: req.query.email,
-          num_deleted: result,
-        })
-        .end();
-    }
-  } catch (e) {
-    throw new Error("Internal Service Exception");
-  }
-});
-
-// Update user by email
-app.patch("/users", cookieJwtAuth, async (req, res) => {
-  const body = {};
-  req.query.first_name ? (body.first_name = req.query.first_name) : {};
-  req.query.last_name ? (body.last_name = req.query.last_name) : {};
-  req.query.password ? (body.password = req.query.password) : {};
-  req.query.phone_number ? (body.phone_number = req.query.phone_number) : {};
-  try {
-    let result = await MongoBot.Users.updateUser(req.email, body);
-    return res.send(result).end();
-  } catch (e) {
-    throw new Error("Internal Service Exception");
-  }
-});
-
-//signup function
-app.post("/users", createUser, async (req, res) => {
-  const user = {
-    email: req.query.email,
-    password: req.query.password,
-    first_name: req.query.first_name,
-    last_name: req.query.last_name,
-    phone_number: req.query.phone_number,
-  };
-  let result = await MongoBot.Users.addUser(user);
-  res.send(result).end();
-});
+// Textie routes
+app.post("/texties", tokenValidator.validate, texties.create);
+app.get("/texties", tokenValidator.validate, texties.list);
+app.patch("/texties", tokenValidator.validate, texties.update);
+app.delete("/texties", tokenValidator.validate, texties.delete);

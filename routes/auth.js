@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const MongoBot = require("../mongo");
+require("dotenv").config();
 
 module.exports = async (req, res) => {
   const email = req.query.email;
