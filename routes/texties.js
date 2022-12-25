@@ -43,6 +43,6 @@ exports.update = async function (req, res) {
 // delete texties based on _id
 exports.delete = async function (req, res) {
   const id = req.query.id;
-  result = await MongoBot.Notes.delNote(id);
+  const result = await MongoBot.Notes.delNote(id);
   res.json({ notes_deleted: result }).end();
 };
