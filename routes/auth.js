@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   const password = req.query.password;
   const user = await MongoBot.Users.getUser(email);
   if (user === undefined) {
-    return res
+    res
       .status(404)
       .json({
         error: "access denied exception. Incorrect username.",
@@ -15,14 +15,14 @@ module.exports = async (req, res) => {
       .clearCookie("token")
       .end();
   } else if (user.password !== password) {
-    return res
+    res
       .status(403)
       .json({
         error: "access denied exception. Invalid username or login.",
       })
       .clearCookie("token")
       .end();
-  } else {
+  } else if (user !== undefined && user.password === password) {
     console.log("user" + user);
     const token = jwt.sign(user, process.env.AUTH_SECRET, {
       expiresIn: "1h",
