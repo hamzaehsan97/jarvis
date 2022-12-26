@@ -8,6 +8,7 @@ const texties = require("./routes/texties");
 const tokenValidator = require("./middleware/auth_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
+const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -26,6 +27,7 @@ async function start() {
 }
 start();
 
+app.use(cors());
 app.use(cookieParser());
 app.use(time_middleware.requestTime);
 
