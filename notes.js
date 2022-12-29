@@ -31,7 +31,7 @@ class Notes {
     try {
       const result = await this.collection
         .remove({ _id: { $in: id } })
-        .deleteOne({ $expr: { $eq: ["$_id", { $toObjectId: id }] } })
+        // .deleteOne({ $expr: { $eq: ["$_id", { $toObjectId: id }] } })
         .catch((error) => {
           console.log(error);
         });
