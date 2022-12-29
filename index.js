@@ -54,5 +54,5 @@ app.post("/comms", tokenValidator.validate, communicate.send_email);
 // Textie routes
 app.post("/texties", tokenValidator.validate, texties.create);
 app.get("/texties", tokenValidator.validate, texties.list);
-app.patch("/texties", texties.update);
+app.patch("/texties", tokenValidator.validate, texties.update);
 app.delete("/texties", tokenValidator.validate, texties.delete);

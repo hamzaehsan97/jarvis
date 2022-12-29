@@ -2,7 +2,16 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 exports.validate = (req, res, next) => {
-  const token = req.get("token");
+  let token = req.get("token");
+  if (!token) {
+    console.log("token not in header, checking for token in parameters");
+    token = req.query.token;
+    if (!token) {
+      return res
+        .send("message: token is missing from header and parameters.")
+        .end();
+    }
+  }
   try {
     const user = jwt.verify(token, process.env.AUTH_SECRET);
     req.user = user;
