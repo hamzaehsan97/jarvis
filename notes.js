@@ -35,7 +35,7 @@ class Notes {
         .catch((error) => {
           console.log(error);
         });
-      return result.deletedCount;
+      return result;
     } catch (err) {
       throw new Error(err);
     }
