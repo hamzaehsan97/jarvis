@@ -30,16 +30,11 @@ class Notes {
   async delNote(id) {
     try {
       const result = await this.collection
-        .deleteMany({
-          _id: {
-            $in: id,
-          },
-        })
-        // .deleteOne({ $expr: { $eq: ["$_id", { $toObjectId: id }] } })
+        .deleteOne({ $expr: { $eq: ["$_id", { $toObjectId: id }] } })
         .catch((error) => {
           console.log(error);
         });
-      return result;
+      return result.deletedCount;
     } catch (err) {
       throw new Error(err);
     }
