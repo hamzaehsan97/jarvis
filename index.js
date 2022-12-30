@@ -5,6 +5,7 @@ const communicate = require("./routes/communicate");
 const auth = require("./routes/auth");
 const users = require("./routes/users");
 const texties = require("./routes/texties");
+const services = require("./routes/services");
 const tokenValidator = require("./middleware/auth_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
@@ -56,3 +57,6 @@ app.post("/texties", tokenValidator.validate, texties.create);
 app.get("/texties", tokenValidator.validate, texties.list);
 app.patch("/texties", tokenValidator.validate, texties.update);
 app.delete("/texties", tokenValidator.validate, texties.delete);
+
+// Services routes
+app.post("/services", tokenValidator.validate, services.activate_service);
