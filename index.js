@@ -1,9 +1,17 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const path = require("path");
-const jwt = require("jsonwebtoken");
+const communicate = require("./routes/communicate");
+const auth = require("./routes/auth");
+const users = require("./routes/users");
+const texties = require("./routes/texties");
+const services = require("./routes/services");
+const tokenValidator = require("./middleware/auth_middleware");
+const time_middleware = require("./middleware/time_middleware");
+const users_middleware = require("./middleware/users_middleware");
+const cors = require("cors");
 require("dotenv").config();
-
+const PORT = process.env.PORT || 3000;
 const app = express();
 app.use(
   express.urlencoded({
@@ -11,130 +19,44 @@ app.use(
   })
 );
 
+app.set("port", PORT);
+
 const MongoBot = require("./mongo");
 async function start() {
   await MongoBot.init();
-  app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-  });
+  app.listen(PORT);
 }
 start();
 
-const auth = require("./routes/auth");
-const port = process.env.PORT || 3000;
-
+app.use(cors());
 app.use(cookieParser());
+app.use(time_middleware.requestTime);
 
-const requestTime = function (req, res, next) {
-  req.requestTime = Date.now();
-  console.log("Time:", req.requestTime);
-  next();
-};
-app.use(requestTime);
+app.get("/", (req, res) => {
+  res.send("welcome young'n").end();
+});
 
-// Auth at authRoute
+// User routes
+app.post("/users", users_middleware.createUser, users.create);
+app.get("/users", tokenValidator.validate, users.read);
+app.patch("/users", tokenValidator.validate, users.update);
+app.delete("/users", tokenValidator.validate, users.delete);
+app.patch("/users/create_otp", users.create_otp);
+app.get("/users/verify_otp", users.verify_otp);
+app.patch("/users/update_password", users.update_password);
+app.get("/users/logout", users.logout);
+
+// Auth routes
 app.get("/auth", auth);
 
-// token validation middleware
-const cookieJwtAuth = (req, res, next) => {
-  const token = req.get("token");
-  if (token === undefined || token === null || token === "") {
-    return res
-      .status(403)
-      .send("Access denied exception. Token is missing")
-      .end();
-  } else {
-    try {
-      const user = jwt.verify(token, process.env.AUTH_SECRET);
-      req.user = user.email;
-      next();
-    } catch (err) {
-      console.log(err);
-      res.clearCookie("token");
-      return res.send("Access denied exception. Token is expired.").end();
-    }
-  }
-};
+// Comms routes
+app.post("/comms", tokenValidator.validate, communicate.send_email);
 
-app.get("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "logout successful" }).end();
-});
+// Textie routes
+app.post("/texties", tokenValidator.validate, texties.create);
+app.get("/texties", tokenValidator.validate, texties.list);
+app.patch("/texties", tokenValidator.validate, texties.update);
+app.delete("/texties", tokenValidator.validate, texties.delete);
 
-// Validatate input for textie post request
-app.use("/texties", (req, res, next) => {
-  if (req.method == "POST") {
-    if (req.query.content == null) {
-      throw new Error("Validation error: content is null.");
-    }
-  }
-  next();
-});
-
-// gets either all texties or by filters
-app.get("/texties", cookieJwtAuth, async (req, res) => {
-  req.query.email = req.user;
-  req.query.content = req.query.content
-    ? { $regex: req.query.content }
-    : { $regex: "" };
-  let query = req.query;
-  let result = await MongoBot.Notes.findNotes(query);
-  res.send(result).end();
-});
-
-// posts texties based on type
-app.post("/texties", cookieJwtAuth, async (req, res) => {
-  const content = req.query.content;
-  const time = req.requestTime;
-  const type = req.query.type ? req.query.type : "note";
-  let body = {
-    content: content,
-    type: type,
-    time: time,
-    email: req.user,
-  };
-  result = await MongoBot.Notes.addNotes(body);
-  res.send(result).end();
-});
-
-// create user middleware
-const createUser = (req, res, next) => {
-  if (req.method == "POST") {
-    if (req.query.email == null || req.query.password == null) {
-      throw new Error("Validation error: email or password cannot be null.");
-    }
-  }
-  next();
-};
-
-app.delete("/users", cookieJwtAuth, async (req, res) => {
-  if (req.query.email == null) {
-    throw new Error("Validation error: email cannot be null.");
-  }
-  let result = await MongoBot.Users.delUser(req.query.email);
-  if (result < 1) {
-    res.status(404).json({ message: "User not found" }).end();
-  } else {
-    res
-      .status(200)
-      .json({
-        message: "account deleted successfully",
-        account: req.query.email,
-        num_deleted: result,
-      })
-      .end();
-  }
-});
-
-//login function
-app.post("/users", createUser, async (req, res) => {
-  const user = {
-    email: req.query.email,
-    password: req.query.password,
-    first_name: req.query.first_name,
-    last_name: req.query.last_name,
-    phone_number: req.query.phone_number,
-  };
-  let result = await MongoBot.Users.addUser(user);
-  res.status(result.status).json({ message: result.message }).end();
-});
+// Services routes
+app.post("/services", tokenValidator.validate, services.activate_service);
