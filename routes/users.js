@@ -111,7 +111,7 @@ exports.verify_otp = async function (req, res) {
 
 // Check if otp correct, change password
 exports.update_password = async function (req, res) {
-  const email = req.query.email;
+  const email = req.email;
   const otp = req.query.otp;
   const new_password = req.query.password;
   let check = await otp_check.verify_otp(email, otp);
@@ -132,6 +132,36 @@ exports.update_password = async function (req, res) {
     }
   } else {
     res.status(403).send({ message: check.message }).end();
+  }
+};
+
+// set account secret
+exports.set_secret = async function (req, res) {
+  const user = req.email;
+  const secret = req.query.secret;
+  const body = {
+    secret: secret,
+  };
+  let add_secret = await MongoBot.Users.updateUser(user, body);
+  if (add_secret.modifiedCount > 0) {
+    res.json({ message: "secret set successfully" }).end();
+  } else {
+    res.status(500).json({ message: "unknown error in setting status" }).end();
+  }
+};
+
+// get account secret
+exports.get_secret = async function (req, res) {
+  const user = req.email;
+  const result = await MongoBot.Users.getUser(user);
+  if (result === undefined) {
+    res.status(404).send({ message: "user not found" }).end();
+  } else {
+    if (result.secret) {
+      res.json({ secret: result.secret }).end();
+    } else {
+      res.status(404).send({ message: "secret not set for this user" }).end();
+    }
   }
 };
 
