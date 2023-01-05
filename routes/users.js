@@ -139,14 +139,21 @@ exports.update_password = async function (req, res) {
 exports.set_secret = async function (req, res) {
   const user = req.email;
   const secret = req.query.secret;
-  const body = {
-    secret: secret,
-  };
-  let add_secret = await MongoBot.Users.updateUser(user, body);
-  if (add_secret.modifiedCount > 0) {
-    res.json({ message: "secret set successfully" }).end();
+  if (secret === null || secret === undefined || secret === "") {
+    res.status(403).json({ message: "validation exception" }).end();
   } else {
-    res.status(500).json({ message: "unknown error in setting status" }).end();
+    const body = {
+      secret: secret,
+    };
+    let add_secret = await MongoBot.Users.updateUser(user, body);
+    if (add_secret.modifiedCount > 0) {
+      res.json({ message: "secret set successfully" }).end();
+    } else {
+      res
+        .status(500)
+        .json({ message: "unknown error in setting status" })
+        .end();
+    }
   }
 };
 
