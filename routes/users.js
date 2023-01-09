@@ -89,7 +89,9 @@ exports.create_otp = async function (req, res) {
           constants.account_retrieval.subject,
           constants.account_retrieval.text + otp
         )
-        .then((response) => res.send(response.message))
+        .then((response) =>
+          res.json({ message: "Password reset email send successfully" }).end()
+        )
         .catch((error) => res.status(500).send(error.message));
     }
   }
