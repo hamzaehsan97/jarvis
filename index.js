@@ -7,6 +7,7 @@ const users = require("./routes/users");
 const texties = require("./routes/texties");
 const services = require("./routes/services");
 const passwords = require("./routes/passwords");
+const leads = require("./routes/leads");
 const tokenValidator = require("./middleware/auth_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
@@ -46,7 +47,6 @@ app.patch("/users/otp", users.create_otp);
 app.get("/users/otp", users.verify_otp);
 app.patch("/users/password", tokenValidator.validate, users.update_password);
 app.post("/users/secret", tokenValidator.validate, users.set_secret);
-// app.get("/users/secret", tokenValidator.validate, users.get_secret);
 app.get("/users/logout", users.logout);
 
 // Auth routes
@@ -69,3 +69,6 @@ app.post("/passwords", tokenValidator.validate, passwords.create);
 app.get("/passwords", tokenValidator.validate, passwords.list);
 app.patch("/passwords", tokenValidator.validate, passwords.update);
 app.delete("/passwords", tokenValidator.validate, passwords.delete);
+
+// Hotline routes
+app.post("/hotline/leads", tokenValidator.validate, leads.create);
