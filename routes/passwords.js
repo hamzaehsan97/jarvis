@@ -87,6 +87,7 @@ exports.update = async function (req, res) {
   let body = {};
   req.query.content ? (body.content = await encryptPassword(req, res)) : {};
   req.query.type ? (body.type = req.query.type) : {};
+  req.query.portal ? (body.portal = req.query.portal) : {};
   body.lastUpdateTime = req.requestTime;
   body.email = req.email;
   const result = await MongoBot.Passwords.updatePassword(id, body);
