@@ -157,21 +157,6 @@ exports.set_secret = async function (req, res) {
   }
 };
 
-// get account secret
-exports.get_secret = async function (req, res) {
-  const user = req.email;
-  const result = await MongoBot.Users.getUser(user);
-  if (result === undefined) {
-    res.status(404).send({ message: "user not found" }).end();
-  } else {
-    if (result.secret) {
-      res.json({ secret: result.secret }).end();
-    } else {
-      res.status(404).send({ message: "secret not set for this user" }).end();
-    }
-  }
-};
-
 // logout user
 exports.logout = function (req, res) {
   res.clearCookie("token");
