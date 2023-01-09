@@ -67,3 +67,5 @@ app.post("/services", tokenValidator.validate, services.activate_service);
 // Passwords routes
 app.post("/passwords", tokenValidator.validate, passwords.create);
 app.get("/passwords", tokenValidator.validate, passwords.list);
+app.patch("/passwords", tokenValidator.validate, passwords.update);
+app.delete("/passwords", tokenValidator.validate, passwords.delete);
