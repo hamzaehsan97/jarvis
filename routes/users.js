@@ -50,7 +50,6 @@ exports.delete = async function (req, res) {
     throw new Error("Validation error: email cannot be null.");
   }
   try {
-    console.log("trynna delete");
     let result = await MongoBot.Users.delUser(req.query.email);
     if (result === undefined || result < 1) {
       res.status(404).json({ message: "User not found" }).end();

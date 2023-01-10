@@ -23,7 +23,6 @@ module.exports = async (req, res) => {
       })
       .end();
   } else if (user !== undefined && user.password === password) {
-    console.log("user" + user);
     const token = jwt.sign(user, process.env.AUTH_SECRET, {
       expiresIn: "1h",
     });

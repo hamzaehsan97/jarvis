@@ -67,17 +67,12 @@ const get_secret = async function (req, res) {
 // post secrets with account secrets
 exports.create_password = async function (req, res) {
   const user = req.email;
-  console.log("here");
   const secret = await get_secret(req, res);
   const password = req.query.password;
   if (user && secret) {
-    console.log("user", user);
-    console.log("secret", secret);
     let ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
-    console.log("ciphertext", ciphertext);
     let bytes = CryptoJS.AES.decrypt(ciphertext, secret);
     let originalText = bytes.toString(CryptoJS.enc.Utf8);
-    console.log("original", originalText);
     res
       .send({ encrypted: ciphertext, original: originalText, secret: secret })
       .end();

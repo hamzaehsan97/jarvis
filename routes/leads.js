@@ -5,15 +5,15 @@ const MongoBot = require("../mongo");
 // posts leads
 exports.create = async function (req, res) {
   const name = req.query.name;
-  const number = req.query.number;
+  const phone_number = req.query.phone_number;
   const size = req.query.size ? req.query.size : -1;
   const society = req.query.society ? req.query.society : "any";
   const budget = req.query.budget ? req.query.budget : -1;
   const time = req.requestTime;
-  if (name && number && size && society && society) {
+  if (name && phone_number && size && society && society) {
     let body = {
       name: name,
-      number: number,
+      phone_number: phone_number,
       size: size,
       society: society,
       author: req.email,
@@ -27,16 +27,14 @@ exports.create = async function (req, res) {
   }
 };
 
-// // gets either all texties or by filters
-// exports.list = async function (req, res) {
-//   req.query.email = req.email;
-//   req.query.content = req.query.content
-//     ? { $regex: req.query.content }
-//     : { $regex: "" };
-//   let query = req.query;
-//   let result = await MongoBot.Notes.findNotes(query);
-//   res.send(result).end();
-// };
+// gets either all texties or by filters
+exports.list = async function (req, res) {
+  req.query.author = req.email;
+  req.query.name = req.query.name ? { $regex: req.query.name } : { $regex: "" };
+  let query = req.query;
+  let result = await MongoBot.Leads.findLeads(query);
+  res.send(result).end();
+};
 
 // // update texties based on id
 // exports.update = async function (req, res) {
