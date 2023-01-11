@@ -45,7 +45,7 @@ app.patch("/users", tokenValidator.validate, users.update);
 app.delete("/users", tokenValidator.validate, users.delete);
 app.patch("/users/otp", users.create_otp);
 app.get("/users/otp", users.verify_otp);
-app.patch("/users/password", tokenValidator.validate, users.update_password);
+app.patch("/users/password", users.update_password);
 app.post("/users/secret", tokenValidator.validate, users.set_secret);
 app.get("/users/logout", users.logout);
 

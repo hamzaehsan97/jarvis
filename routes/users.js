@@ -112,20 +112,20 @@ exports.verify_otp = async function (req, res) {
 
 // Check if otp correct, change password
 exports.update_password = async function (req, res) {
-  const email = req.email;
-  const otp = req.query.otp;
+  const email = req.query.email;
   const new_password = req.query.password;
+  const otp = req.query.otp;
   let check = await otp_check.verify_otp(email, otp);
   if (check.status === 200) {
     let result = await MongoBot.Users.updateUser(email, {
       password: new_password,
     });
     if (result.modifiedCount > 0 && result.modifiedCount < 2) {
-      res.send({ message: "password changed successfully" }).end();
+      res.json({ message: "password changed successfully" }).end();
     } else {
       res
         .status(500)
-        .send({
+        .json({
           message:
             "Interal Service Exception. Password change failed with unknown error.",
         })
