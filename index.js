@@ -74,3 +74,4 @@ app.delete("/passwords", tokenValidator.validate, passwords.delete);
 // Hotline routes
 app.post("/hotline/leads", tokenValidator.validate, leads.create);
 app.get("/hotline/leads", tokenValidator.validate, leads.list);
+app.get("/hotline/leads", tokenValidator.validate, leads.delete);

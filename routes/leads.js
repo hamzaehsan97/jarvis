@@ -48,12 +48,12 @@ exports.list = async function (req, res) {
 //   res.send(result).end();
 // };
 
-// // delete texties based on _id
-// exports.delete = async function (req, res) {
-//   const id = req.query.id;
-//   const result = await MongoBot.Notes.delNote(id);
-//   res.json({ notes_deleted: result }).end();
-// };
+// delete texties based on _id
+exports.delete = async function (req, res) {
+  const id = req.query.id;
+  const result = await MongoBot.Leads.delLead(id);
+  res.json({ leads_deleted: result }).end();
+};
 
 // // get account secret
 // const get_secret = async function (req, res) {
