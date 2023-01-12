@@ -22,9 +22,22 @@ module.exports = async (req, res) => {
         error: "access denied exception. Invalid username or login.",
       })
       .end();
-  } else if (user !== undefined && user.password === password) {
+  } else if (user.activated === false) {
+    res
+      .status(405)
+      .clearCookie("token")
+      .send({
+        message:
+          "User is not verified yet. Please check account verification email or request account verification.",
+      })
+      .end();
+  } else if (
+    user !== undefined &&
+    user.password === password &&
+    user.activated === true
+  ) {
     const token = jwt.sign(user, process.env.AUTH_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "3h",
     });
     return res
       .cookie("token", token, { maxAge: 10800 })

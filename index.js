@@ -43,6 +43,7 @@ app.post("/users", users_middleware.createUser, users.create);
 app.get("/users", tokenValidator.validate, users.read);
 app.patch("/users", tokenValidator.validate, users.update);
 app.delete("/users", tokenValidator.validate, users.delete);
+app.post("/users/verify", users.verify_account);
 app.patch("/users/otp", users.create_otp);
 app.get("/users/otp", users.verify_otp);
 app.patch("/users/password", users.update_password);

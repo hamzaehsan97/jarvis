@@ -13,9 +13,34 @@ exports.create = async function (req, res) {
     first_name: req.query.first_name,
     last_name: req.query.last_name,
     phone_number: req.query.phone_number,
+    activated: false,
   };
-  let result = await MongoBot.Users.addUser(user);
-  res.send(result).end();
+  const result = await MongoBot.Users.addUser(user);
+  const verify = await sendVerificationEmail(req.query.email);
+  if (result.status == 200 && verify.status == 200) {
+    result.next = "Email verification sent to " + req.query.email;
+    res.send(result).end();
+  } else {
+    res
+      .status(403)
+      .send({ message: "Invalid request. User not created successfully" });
+  }
+};
+
+const sendVerificationEmail = async (email) => {
+  const otp = Math.floor(1000 + Math.random() * 9000);
+  const add_otp = await otp_check.update_OTP(otp, email);
+  console.log("otp", add_otp);
+  if (add_otp == false) {
+    return { status: 403 };
+  } else {
+    const mail = await mailman.send_mail(
+      email,
+      constants.verify_email.subject,
+      constants.account_retrieval.text + otp
+    );
+    return mail;
+  }
 };
 
 // get user by email
@@ -75,11 +100,8 @@ exports.create_otp = async function (req, res) {
     req.status(404).send({ message: "user not found" });
   } else {
     const otp = Math.floor(1000 + Math.random() * 9000);
-    const body = {
-      otp: otp,
-    };
-    let add_otp = await MongoBot.Users.updateUser(email, body);
-    if (add_otp === undefined) {
+    let add_otp = otp_check.update_OTP(opt, email);
+    if (add_otp == false) {
       res.status(404).send({ message: "unable to send retrieval code" }).end();
     } else {
       mailman
@@ -101,12 +123,34 @@ exports.verify_otp = async function (req, res) {
   const email = req.query.email;
   const otp = req.query.otp;
   let check = await otp_check.verify_otp(email, otp);
+  if (check.status !== 200) {
+    res.status(500).send({
+      message: "Could not verify OTP. Try again please.",
+      status: 403,
+    });
+  } else {
+    res.send({ message: check.message, status: 200 }).end();
+  }
+};
+
+// Verify account
+exports.verify_account = async function (req, res) {
+  const email = req.query.email;
+  const otp = req.query.otp;
+  let check = await otp_check.verify_otp(email, otp);
   if (check === null) {
     res
       .status(500)
       .send({ message: "Internal Service Exception. could not verify OTP." });
   } else {
-    res.send(check.message).end();
+    let result = await MongoBot.Users.updateUser(email, {
+      activated: true,
+    });
+    if (result.modifiedCount > 0) {
+      res.send({ message: check.message, status: 200 }).end();
+    } else {
+      res.send({ message: "Error activating account.", status: 500 }).end();
+    }
   }
 };
 

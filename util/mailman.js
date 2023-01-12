@@ -21,9 +21,9 @@ exports.send_mail = async function (receiver, subject, text) {
     transporter.sendMail(mail_configs, function (error, info) {
       if (error) {
         console.log(error);
-        return reject({ message: "unable to send email" });
+        return reject({ status: 403, message: "unable to send email" });
       } else {
-        return resolve({ message: "email sent successfully" });
+        return resolve({ status: 200, message: "email sent successfully" });
       }
     });
   });
