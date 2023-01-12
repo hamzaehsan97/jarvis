@@ -42,12 +42,12 @@ app.get("/", (req, res) => {
 app.post("/users", users_middleware.createUser, users.create);
 app.get("/users", tokenValidator.validate, users.read);
 app.patch("/users", tokenValidator.validate, users.update);
-app.delete("/users", tokenValidator.validate, users.delete);
-app.post("/users/verify", users.verify_account);
-app.patch("/users/otp", users.create_otp);
-app.get("/users/otp", users.verify_otp);
-app.patch("/users/password", users.update_password);
-app.post("/users/secret", tokenValidator.validate, users.set_secret);
+app.delete("/users", tokenValidator.validate, users.delete); //delete user funtionality (Should only be available for admins)
+app.post("/users/verify", users.verify_account); //verify user account with email and otp
+app.patch("/users/otp", users.create_otp); //create a new otp code for the user
+app.get("/users/otp", users.verify_otp); //verify user otp
+app.patch("/users/password", users.update_password); //update user password, otp required
+app.post("/users/secret", tokenValidator.validate, users.set_secret); //update user secret
 app.get("/users/logout", users.logout);
 
 // Auth routes
