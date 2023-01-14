@@ -1,5 +1,25 @@
 const MongoBot = require("../mongo");
 
+const update_OTP = async function (otp, email) {
+  const body = {
+    otp: otp,
+  };
+  let add_otp = await MongoBot.Users.updateUser(email, body);
+  if (add_otp.modifiedCount > 0 && add_otp.modifiedCount < 2) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+exports.update_OTP = update_OTP;
+
+const randomize_OTP = async function (email) {
+  const otp = Math.floor(1000 + Math.random() * 9000);
+  let send = await update_OTP(otp, email);
+  return send;
+};
+
 exports.verify_otp = async function (email, otp) {
   let user = await MongoBot.Users.getUser(email);
   if (user === undefined) {
@@ -16,10 +36,17 @@ exports.verify_otp = async function (email, otp) {
       };
     } else {
       if (otp == user_otp) {
-        return {
-          status: 200,
-          message: "OTP has been verified",
-        };
+        if (randomize_OTP(email)) {
+          return {
+            status: 200,
+            message: "OTP has been verified",
+          };
+        } else {
+          return {
+            status: 200,
+            message: "OTP has been verified with some security issues",
+          };
+        }
       } else {
         return {
           status: 404,

@@ -2,6 +2,8 @@ const { MongoClient } = require("mongodb");
 const Users = require("./users");
 const Services = require("./services");
 const Notes = require("./notes");
+const Passwords = require("./passwords");
+const Leads = require("./leads");
 require("dotenv").config();
 
 class MongoBot {
@@ -22,6 +24,8 @@ class MongoBot {
     this.Notes = new Notes(this.db);
     this.Users = new Users(this.db);
     this.Services = new Services(this.db);
+    this.Passwords = new Passwords(this.db);
+    this.Leads = new Leads(this.db);
   }
 }
 

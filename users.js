@@ -6,7 +6,11 @@ class Users {
   async addUser(user) {
     try {
       const newEntry = await this.collection.insertOne(user);
-      return newEntry;
+      return {
+        status: 200,
+        message: "user created successfully",
+        new_Entry: newEntry,
+      };
     } catch (err) {
       return {
         status: 400,
