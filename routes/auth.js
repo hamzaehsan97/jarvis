@@ -1,11 +1,16 @@
 const jwt = require("jsonwebtoken");
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
+const encryption = require("../util/encryption");
 require("dotenv").config();
 
 module.exports = async (req, res) => {
   const email = req.query.email;
   const password = req.query.password;
   const user = await MongoBot.Users.getUser(email);
+  const decrypted_password = encryption.decrypt(
+    user.password,
+    process.env.AUTH_SECRET
+  );
   if (user === undefined) {
     return res
       .status(404)
@@ -14,7 +19,7 @@ module.exports = async (req, res) => {
         error: "access denied exception. Incorrect username.",
       })
       .end();
-  } else if (user.password !== password) {
+  } else if (decrypted_password !== password) {
     return res
       .status(403)
       .clearCookie("token")
@@ -33,7 +38,7 @@ module.exports = async (req, res) => {
       .end();
   } else if (
     user !== undefined &&
-    user.password === password &&
+    decrypted_password === password &&
     user.activated === true
   ) {
     const token = jwt.sign(user, process.env.AUTH_SECRET, {
