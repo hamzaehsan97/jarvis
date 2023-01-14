@@ -2,7 +2,7 @@
 
 const MongoBot = require("../mongo");
 const CryptoJS = require("crypto-js");
-
+const encryption = require("../util/encryption");
 // get account secret
 const get_secret = async function (req, res) {
   const user = req.email;
@@ -17,19 +17,6 @@ const get_secret = async function (req, res) {
     }
     return false;
   }
-};
-
-const encryptPassword = async function (req, res) {
-  const secret = await get_secret(req, res);
-  const req_data = req.query.content;
-  const ciphertext = CryptoJS.AES.encrypt(req_data, secret).toString();
-  return ciphertext;
-};
-
-const decrypt_data = function (data, provided_secret) {
-  let bytes = CryptoJS.AES.decrypt(data, provided_secret);
-  let decrypted = bytes.toString(CryptoJS.enc.Utf8);
-  return decrypted;
 };
 
 // posts password
@@ -69,7 +56,7 @@ exports.list = async function (req, res) {
   if (key && result.length > 0) {
     try {
       result.forEach(function (arr, index, item) {
-        let decrypted = decrypt_data(arr.content, key);
+        let decrypted = encryption.decrypt(arr.content, key);
         if (decrypted) {
           arr.content = decrypted;
         }
@@ -84,8 +71,12 @@ exports.list = async function (req, res) {
 // update texties based on id
 exports.update = async function (req, res) {
   const id = req.query.id;
+  const secret = await get_secret(req, res);
+  const req_data = req.query.content;
   let body = {};
-  req.query.content ? (body.content = await encryptPassword(req, res)) : {};
+  req.query.content
+    ? (body.content = await encryption.encrypt(secret, req_data))
+    : {};
   req.query.type ? (body.type = req.query.type) : {};
   req.query.portal ? (body.portal = req.query.portal) : {};
   body.lastUpdateTime = req.requestTime;

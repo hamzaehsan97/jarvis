@@ -4,12 +4,17 @@ const MongoBot = require("../mongo");
 const mailman = require("../util/mailman");
 const constants = require("../constants/comms_constants");
 const otp_check = require("../util/verify_otp");
+const encryption = require("../util/encryption");
+require("dotenv").config();
 
 // create user
 exports.create = async function (req, res) {
   const user = {
     email: req.query.email,
-    password: req.query.password,
+    password: await encryption.encrypt(
+      process.env.AUTH_SECRET,
+      req.query.password
+    ),
     first_name: req.query.first_name,
     last_name: req.query.last_name,
     phone_number: req.query.phone_number,
@@ -157,7 +162,10 @@ exports.verify_account = async function (req, res) {
 // Check if otp correct, change password
 exports.update_password = async function (req, res) {
   const email = req.query.email;
-  const new_password = req.query.password;
+  const new_password = encryption.encrypt(
+    process.env.AUTH_SECRET,
+    req.query.password
+  );
   const otp = req.query.otp;
   let check = await otp_check.verify_otp(email, otp);
   if (check.status === 200) {
