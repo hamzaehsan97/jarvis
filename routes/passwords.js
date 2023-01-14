@@ -1,6 +1,6 @@
 "use strict";
 
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
 const CryptoJS = require("crypto-js");
 const encryption = require("../util/encryption");
 // get account secret
@@ -11,7 +11,7 @@ const get_secret = async function (req, res) {
     res.status(404).send({ message: "user not found" }).end();
   } else {
     if (result.secret) {
-      return result.secret;
+      return encryption.decrypt(result.secret, process.env.AUTH_SECRET);
     } else {
       res.status(404).send({ message: "secret not set for this user" }).end();
     }
@@ -28,6 +28,7 @@ exports.create = async function (req, res) {
   const type = req.query.type ? req.query.type : "password";
   const portal = req.query.portal ? req.query.portal : "";
   if (user && secret) {
+    console.log("SECRET_USED", secret);
     let ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
     let body = {
       content: ciphertext,

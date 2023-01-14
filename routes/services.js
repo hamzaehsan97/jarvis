@@ -1,6 +1,6 @@
 "use strict";
 
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
 const mailman = require("../util/mailman");
 const constants = require("../constants/comms_constants");
 const otp_check = require("../util/verify_otp");

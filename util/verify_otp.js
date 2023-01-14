@@ -1,8 +1,10 @@
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
+const encryption = require("./encryption");
+require("dotenv").config();
 
 const update_OTP = async function (otp, email) {
   const body = {
-    otp: otp,
+    otp: await encryption.encrypt(process.env.AUTH_SECRET, toString(otp)),
   };
   let add_otp = await MongoBot.Users.updateUser(email, body);
   if (add_otp.modifiedCount > 0 && add_otp.modifiedCount < 2) {
@@ -35,7 +37,9 @@ exports.verify_otp = async function (email, otp) {
         message: "invalid request. send one time password again.",
       };
     } else {
-      if (otp == user_otp) {
+      if (
+        toString(otp) == encryption.decrypt(user_otp, process.env.AUTH_SECRET)
+      ) {
         if (randomize_OTP(email)) {
           return {
             status: 200,

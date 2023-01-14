@@ -1,6 +1,6 @@
 "use strict";
 
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
 
 // posts leads
 exports.create = async function (req, res) {

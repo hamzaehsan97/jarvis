@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
 const encryption = require("../util/encryption");
 require("dotenv").config();
 

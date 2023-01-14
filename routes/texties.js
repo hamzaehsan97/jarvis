@@ -1,6 +1,6 @@
 "use strict";
 
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
 const CryptoJS = require("crypto-js");
 
 // posts texties based on type

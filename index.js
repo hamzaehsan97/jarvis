@@ -23,7 +23,7 @@ app.use(
 
 app.set("port", PORT);
 
-const MongoBot = require("./mongo");
+const MongoBot = require("./db/mongo");
 async function start() {
   await MongoBot.init();
   app.listen(PORT);

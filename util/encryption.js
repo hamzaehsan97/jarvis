@@ -1,6 +1,6 @@
 const CryptoJS = require("crypto-js");
 
-const encryptData = async function (secret, content) {
+const encryptData = function (secret, content) {
   const ciphertext = CryptoJS.AES.encrypt(content, secret).toString();
   return ciphertext;
 };

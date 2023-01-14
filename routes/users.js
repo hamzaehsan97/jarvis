@@ -1,6 +1,6 @@
 "use strict";
 
-const MongoBot = require("../mongo");
+const MongoBot = require("../db/mongo");
 const mailman = require("../util/mailman");
 const constants = require("../constants/comms_constants");
 const otp_check = require("../util/verify_otp");
@@ -195,8 +195,10 @@ exports.set_secret = async function (req, res) {
   if (secret === null || secret === undefined || secret === "") {
     res.status(403).json({ message: "validation exception" }).end();
   } else {
+    let encrypted = encryption.encrypt(process.env.AUTH_SECRET, secret);
+    console.log("ENCRYPTED", encrypted);
     const body = {
-      secret: secret,
+      secret: encrypted,
     };
     let add_secret = await MongoBot.Users.updateUser(user, body);
     if (add_secret.modifiedCount > 0) {
