@@ -100,7 +100,7 @@ exports.create_otp = async function (req, res) {
     req.status(404).send({ message: "user not found" });
   } else {
     const otp = Math.floor(1000 + Math.random() * 9000);
-    let add_otp = otp_check.update_OTP(opt, email);
+    let add_otp = otp_check.update_OTP(otp, email);
     if (add_otp == false) {
       res.status(404).send({ message: "unable to send retrieval code" }).end();
     } else {
