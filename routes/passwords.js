@@ -3,6 +3,7 @@
 const MongoBot = require("../db/mongo");
 const CryptoJS = require("crypto-js");
 const encryption = require("../util/encryption");
+const dateUtil = require("../util/date");
 // get account secret
 const get_secret = async function (req, res) {
   const user = req.email;
@@ -25,16 +26,17 @@ exports.create = async function (req, res) {
   const secret = await get_secret(req, res);
   const password = req.query.password;
   const time = req.requestTime;
+  const date = dateUtil.getDate(time);
   const type = req.query.type ? req.query.type : "password";
   const portal = req.query.portal ? req.query.portal : "";
   if (user && secret) {
-    console.log("SECRET_USED", secret);
     let ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
     let body = {
       content: ciphertext,
       portal: portal,
       type: type,
       creationTime: time,
+      date: date,
       email: req.email,
     };
     let result = await MongoBot.Passwords.addPassword(body);

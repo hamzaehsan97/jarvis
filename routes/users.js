@@ -35,7 +35,6 @@ exports.create = async function (req, res) {
 const sendVerificationEmail = async (email) => {
   const otp = Math.floor(1000 + Math.random() * 9000);
   const add_otp = await otp_check.update_OTP(otp, email);
-  console.log("otp", add_otp);
   if (add_otp == false) {
     return { status: 403 };
   } else {
@@ -196,7 +195,6 @@ exports.set_secret = async function (req, res) {
     res.status(403).json({ message: "validation exception" }).end();
   } else {
     let encrypted = encryption.encrypt(process.env.AUTH_SECRET, secret);
-    console.log("ENCRYPTED", encrypted);
     const body = {
       secret: encrypted,
     };
