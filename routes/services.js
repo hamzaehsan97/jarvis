@@ -41,3 +41,21 @@ const flatten = (obj, prefix, result) => {
   }
   return result;
 };
+
+// Get all acount services
+exports.read_services = async function (req, res) {};
+
+// Check if a specific service is activated for the account
+exports.is_activated = async function (email, service) {
+  try {
+    const user = await MongoBot.Users.getUser(email);
+    if (user && user.services.includes(service)) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (exception) {
+    console.log("Error in checking if service is active", exception);
+    return false;
+  }
+};

@@ -4,6 +4,7 @@ const Services = require("./services");
 const Notes = require("./notes");
 const Passwords = require("./passwords");
 const Leads = require("./leads");
+const BankAccounts = require("./bank_accounts");
 require("dotenv").config();
 
 class MongoBot {
@@ -26,6 +27,7 @@ class MongoBot {
     this.Services = new Services(this.db);
     this.Passwords = new Passwords(this.db);
     this.Leads = new Leads(this.db);
+    this.BankAccounts = new BankAccounts(this.db);
   }
 }
 
