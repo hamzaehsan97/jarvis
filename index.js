@@ -59,20 +59,52 @@ app.get("/auth", auth);
 app.post("/comms", tokenValidator.validate, communicate.send_email);
 
 // Textie routes
-app.post("/texties", tokenValidator.validate, texties.create);
-app.get("/texties", tokenValidator.validate, texties.list);
-app.patch("/texties", tokenValidator.validate, texties.update);
-app.delete("/texties", tokenValidator.validate, texties.delete);
+app.post(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.create
+);
+app.get(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.list
+);
+app.patch(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.update
+);
+app.delete(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.delete
+);
 
 // Services routes
 app.post("/services", tokenValidator.validate, services.activate_service);
 app.get("/services", tokenValidator.validate, services.read_services);
 
 // Passwords routes
-app.post("/passwords", tokenValidator.validate, passwords.create);
-app.get("/passwords", tokenValidator.validate, passwords.list);
-app.patch("/passwords", tokenValidator.validate, passwords.update);
-app.delete("/passwords", tokenValidator.validate, passwords.delete);
+app.post(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.create
+);
+app.get(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.list
+);
+app.patch(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.update
+);
+app.delete(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.delete
+);
 
 // Hotline routes
 app.post("/hotline/leads", tokenValidator.validate, leads.create);

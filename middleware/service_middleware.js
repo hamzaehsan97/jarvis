@@ -17,7 +17,7 @@ exports.service_activated = (service) => {
         .end();
     } else {
       req.service = service;
+      next();
     }
-    next();
   };
 };
