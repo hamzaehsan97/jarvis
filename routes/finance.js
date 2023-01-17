@@ -58,9 +58,13 @@ exports.create_link_token = async function (request, response, next) {
       if (PLAID_ANDROID_PACKAGE_NAME !== "") {
         configs.android_package_name = PLAID_ANDROID_PACKAGE_NAME;
       }
-      const createTokenResponse = await client.linkTokenCreate(configs);
-      prettyPrintResponse(createTokenResponse);
-      response.json(createTokenResponse.data);
+      try {
+        const createTokenResponse = await client.linkTokenCreate(configs);
+        prettyPrintResponse(createTokenResponse);
+        response.json(createTokenResponse.data);
+      } catch (exp) {
+        response.status(400).json({ message: "Error creating link" });
+      }
     })
     .catch(next);
 };
@@ -78,28 +82,32 @@ exports.set_access_token = async function (request, response, next) {
         const tokenResponse = await client.itemPublicTokenExchange(body);
         access_token = tokenResponse.data.access_token;
         item_id = tokenResponse.data.item_id;
+        if (access_token && item_id) {
+          //persist the token permanently
+          const save_token = await MongoBot.BankAccounts.addAccessToken({
+            email: request.email,
+            access_token: access_token,
+            item_id: item_id,
+          });
+          if (save_token !== null) {
+            response.json({
+              message: "Bank account connected successfully",
+              item_id: "Item id created",
+              error: null,
+            });
+          }
+        } else {
+          response.status(400).json({
+            message: "Error is connecting bank account",
+            error: "Unknown issue happened",
+          });
+        }
       } catch (ex) {
-        console.log(ex.response.data);
-      }
-      if (access_token && item_id) {
-        //persist the token permanently
-        const save_token = await MongoBot.BankAccounts.addAccessToken({
-          email: request.email,
-          access_token: access_token,
-          item_id: item_id,
-        });
-        console.log("SAVE TOKEN STATUS", save_token);
-        response.json({
-          // the 'access_token' is a private token, DO NOT pass this token to the frontend in your production environment
-          message: "Bank account connected successfully",
-          item_id: "Item id created",
-          error: null,
-        });
-      } else {
         response.status(400).json({
           message: "Error is connecting bank account",
           error: "Unknown issue happened",
         });
+        console.log(ex.response.data);
       }
     })
     .catch(next);
