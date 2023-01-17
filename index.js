@@ -8,6 +8,7 @@ const texties = require("./routes/texties");
 const services = require("./routes/services");
 const passwords = require("./routes/passwords");
 const leads = require("./routes/leads");
+const finance = require("./routes/finance");
 const tokenValidator = require("./middleware/auth_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
@@ -64,6 +65,7 @@ app.delete("/texties", tokenValidator.validate, texties.delete);
 
 // Services routes
 app.post("/services", tokenValidator.validate, services.activate_service);
+app.get("/services", tokenValidator.validate, services.read_services);
 
 // Passwords routes
 app.post("/passwords", tokenValidator.validate, passwords.create);
@@ -75,3 +77,20 @@ app.delete("/passwords", tokenValidator.validate, passwords.delete);
 app.post("/hotline/leads", tokenValidator.validate, leads.create);
 app.get("/hotline/leads", tokenValidator.validate, leads.list);
 app.delete("/hotline/leads", tokenValidator.validate, leads.delete);
+
+// Finance routes
+app.get(
+  "/finance/plaid/create_link_token",
+  tokenValidator.validate,
+  finance.create_link_token
+);
+app.post(
+  "/finance/plaid/set_access_token",
+  tokenValidator.validate,
+  finance.set_access_token
+);
+app.get(
+  "/finance/plaid/get_balance",
+  tokenValidator.validate,
+  finance.get_balance
+);

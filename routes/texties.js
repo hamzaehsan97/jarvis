@@ -2,16 +2,18 @@
 
 const MongoBot = require("../db/mongo");
 const CryptoJS = require("crypto-js");
-
+const dateUtil = require("../util/date");
 // posts texties based on type
 exports.create = async function (req, res) {
   const content = req.query.content ? req.query.content : "";
   const time = req.requestTime;
+  const date = dateUtil.getDate(time);
   const type = req.query.type ? req.query.type : "note";
   let body = {
     content: content,
     type: type,
     creationTime: time,
+    date: date,
     email: req.email,
   };
   let result = await MongoBot.Notes.addNotes(body);

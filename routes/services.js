@@ -15,9 +15,10 @@ exports.activate_service = async function (req, res) {
     active !== null &&
     active !== undefined
   ) {
-    const services = { [req_service]: active };
+    const status = active == "true" ? true : false;
+    const services = { [req_service]: status };
     flatten(services);
-    const body = { services };
+    let body = { services };
     body = flatten(body);
     const result = await MongoBot.Services.activate_service(req.email, body);
     res.send(result).end();
@@ -40,4 +41,30 @@ const flatten = (obj, prefix, result) => {
     }
   }
   return result;
+};
+
+// Get all acount services
+exports.read_services = async function (req, res) {
+  let email = req.email;
+  const result = await MongoBot.Users.getUser(email);
+  if (result === undefined) {
+    res.status(404).send({ message: "user not found" }).end();
+  } else {
+    res.send(result.services).end();
+  }
+};
+
+// Check if a specific service is activated for the account
+exports.is_activated = async function (email, service) {
+  try {
+    const user = await MongoBot.Users.getUser(email);
+    if (user && user.services.includes(service)) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (exception) {
+    console.log("Error in checking if service is active", exception);
+    return false;
+  }
 };
