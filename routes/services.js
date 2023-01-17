@@ -15,7 +15,8 @@ exports.activate_service = async function (req, res) {
     active !== null &&
     active !== undefined
   ) {
-    const services = { [req_service]: active };
+    const status = active == "true" ? true : false;
+    const services = { [req_service]: status };
     flatten(services);
     let body = { services };
     body = flatten(body);
