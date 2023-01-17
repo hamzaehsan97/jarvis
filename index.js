@@ -65,6 +65,7 @@ app.delete("/texties", tokenValidator.validate, texties.delete);
 
 // Services routes
 app.post("/services", tokenValidator.validate, services.activate_service);
+app.get("/services", tokenValidator.validate, services.read_services);
 
 // Passwords routes
 app.post("/passwords", tokenValidator.validate, passwords.create);
