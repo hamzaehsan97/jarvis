@@ -6,12 +6,11 @@ const {
   Configuration,
   PlaidApi,
   Products,
+  ItemPublicTokenExchangeRequest,
   PlaidEnvironments,
 } = require("plaid");
 const { v4: uuidv4 } = require("uuid");
-const PLAID_PRODUCTS = (
-  process.env.PLAID_PRODUCTS || Products.Transactions
-).split(",");
+const PLAID_PRODUCTS = process.env.PLAID_PRODUCTS.split(",");
 const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || "US").split(
   ","
 );
@@ -60,37 +59,48 @@ exports.create_link_token = async function (request, response, next) {
         configs.android_package_name = PLAID_ANDROID_PACKAGE_NAME;
       }
       const createTokenResponse = await client.linkTokenCreate(configs);
-      // prettyPrintResponse(createTokenResponse);
+      prettyPrintResponse(createTokenResponse);
       response.json(createTokenResponse.data);
     })
     .catch(next);
 };
 
 exports.set_access_token = async function (request, response, next) {
-  PUBLIC_TOKEN = request.body.public_token;
+  const publicToken = request.query.public_token;
+  const body = {
+    public_token: publicToken,
+  };
   Promise.resolve()
     .then(async function () {
-      const tokenResponse = await client.itemPublicTokenExchange({
-        public_token: PUBLIC_TOKEN,
-      });
-      prettyPrintResponse(tokenResponse);
-      ACCESS_TOKEN = tokenResponse.data.access_token;
-      ITEM_ID = tokenResponse.data.item_id;
-      const save_token = await MongoBot.BankAccounts.addAccessToken({
-        email: req.email,
-        access_token: tokenResponse.data.access_token,
-        item_id: tokenResponse.data.item_id,
-      });
-      console.log("SAVE TOKEN STATUS", save_token);
-      // if (PLAID_PRODUCTS.includes(Products.Transfer)) {
-      //   TRANSFER_ID = await authorizeAndCreateTransfer(ACCESS_TOKEN);
-      // }
-      response.json({
-        // the 'access_token' is a private token, DO NOT pass this token to the frontend in your production environment
-        access_token: "Access token received",
-        item_id: "Item id received",
-        error: null,
-      });
+      let access_token = null;
+      let item_id = null;
+      try {
+        const tokenResponse = await client.itemPublicTokenExchange(body);
+        access_token = tokenResponse.data.access_token;
+        item_id = tokenResponse.data.item_id;
+      } catch (ex) {
+        console.log(ex.response.data);
+      }
+      if (access_token && item_id) {
+        //persist the token permanently
+        const save_token = await MongoBot.BankAccounts.addAccessToken({
+          email: request.email,
+          access_token: access_token,
+          item_id: item_id,
+        });
+        console.log("SAVE TOKEN STATUS", save_token);
+        response.json({
+          // the 'access_token' is a private token, DO NOT pass this token to the frontend in your production environment
+          message: "Bank account connected successfully",
+          item_id: "Item id created",
+          error: null,
+        });
+      } else {
+        response.status(400).json({
+          message: "Error is connecting bank account",
+          error: "Unknown issue happened",
+        });
+      }
     })
     .catch(next);
 };
