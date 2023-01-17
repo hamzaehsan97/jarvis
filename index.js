@@ -10,6 +10,7 @@ const passwords = require("./routes/passwords");
 const leads = require("./routes/leads");
 const finance = require("./routes/finance");
 const tokenValidator = require("./middleware/auth_middleware");
+const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
 const cors = require("cors");
@@ -81,16 +82,16 @@ app.delete("/hotline/leads", tokenValidator.validate, leads.delete);
 // Finance routes
 app.get(
   "/finance/plaid/create_link_token",
-  tokenValidator.validate,
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.create_link_token
 );
 app.post(
   "/finance/plaid/set_access_token",
-  tokenValidator.validate,
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.set_access_token
 );
 app.get(
   "/finance/plaid/get_balance",
-  tokenValidator.validate,
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.get_balance
 );
