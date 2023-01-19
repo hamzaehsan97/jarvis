@@ -7,8 +7,14 @@ exports.create = async function (req, res) {
   const name = req.query.name;
   const phone_number = req.query.phone_number;
   const size = req.query.size ? req.query.size : -1;
-  const society = req.query.society ? req.query.society : "any";
+  const society = req.query.society ? req.query.society : "";
   const budget = req.query.budget ? req.query.budget : -1;
+  const assignee = req.query.assignee ? req.query.assignee : req.email;
+  const wants_to = req.query.wants_to ? req.query.wants_to : "";
+  const block = req.query.block ? req.query.block : "";
+
+  req.query.block ? (body.block = req.query.block) : {};
+  req.query.wants_to ? (body.wants_to = req.query.wants_to) : {};
   const time = req.requestTime;
   if (name && phone_number && size && society && society) {
     let body = {
@@ -19,6 +25,9 @@ exports.create = async function (req, res) {
       author: req.email,
       creationTime: time,
       budget: budget,
+      assignee: assignee,
+      block: block,
+      wants_to: wants_to,
     };
     let result = await MongoBot.Leads.addLead(body);
     res.send(result).end();
@@ -45,7 +54,6 @@ exports.update = async function (req, res) {
   req.query.size ? (body.size = req.query.size) : {};
   req.query.phone_number ? (body.phone_number = req.query.phone_number) : {};
   req.query.assignee ? (body.assignee = req.query.assignee) : {};
-  req.query.type ? (body.type = req.query.type) : {};
   req.query.block ? (body.block = req.query.block) : {};
   req.query.wants_to ? (body.wants_to = req.query.wants_to) : {};
   body.lastUpdateTime = req.requestTime;
