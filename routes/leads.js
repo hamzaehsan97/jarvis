@@ -36,17 +36,29 @@ exports.list = async function (req, res) {
   res.send(result).end();
 };
 
-// // update texties based on id
-// exports.update = async function (req, res) {
-//   const id = req.query.id;
-//   let body = {};
-//   req.query.content ? (body.content = req.query.content) : {};
-//   req.query.type ? (body.type = req.query.type) : {};
-//   body.lastUpdateTime = req.requestTime;
-//   body.email = req.email;
-//   const result = await MongoBot.Notes.updateNote(id, body);
-//   res.send(result).end();
-// };
+// update texties based on id
+exports.update = async function (req, res) {
+  const id = req.query.id;
+  let body = {};
+  req.query.name ? (body.name = req.query.name) : {};
+  req.query.society ? (body.society = req.query.society) : {};
+  req.query.size ? (body.size = req.query.size) : {};
+  req.query.phone_number ? (body.phone_number = req.query.phone_number) : {};
+  req.query.assignee ? (body.assignee = req.query.assignee) : {};
+  req.query.type ? (body.query.type = req.query.type) : {};
+  body.lastUpdateTime = req.requestTime;
+  try {
+    const result = await MongoBot.Leads.updateLead(id, body);
+    res.send(result).end();
+  } catch {
+    res
+      .status(400)
+      .json({
+        message: "error in updating lead.",
+      })
+      .end();
+  }
+};
 
 // delete texties based on _id
 exports.delete = async function (req, res) {
@@ -68,27 +80,5 @@ exports.delete = async function (req, res) {
 //       res.status(404).send({ message: "secret not set for this user" }).end();
 //     }
 //     return false;
-//   }
-// };
-
-// // post secrets with account secrets
-// exports.create_password = async function (req, res) {
-//   const user = req.email;
-//   console.log("here");
-//   const secret = await get_secret(req, res);
-//   const password = req.query.password;
-//   if (user && secret) {
-//     console.log("user", user);
-//     console.log("secret", secret);
-//     let ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
-//     console.log("ciphertext", ciphertext);
-//     let bytes = CryptoJS.AES.decrypt(ciphertext, secret);
-//     let originalText = bytes.toString(CryptoJS.enc.Utf8);
-//     console.log("original", originalText);
-//     res
-//       .send({ encrypted: ciphertext, original: originalText, secret: secret })
-//       .end();
-//   } else {
-//     res.status(403).send({ message: "invalid request" }).end();
 //   }
 // };

@@ -110,6 +110,7 @@ app.delete(
 app.post("/hotline/leads", tokenValidator.validate, leads.create);
 app.get("/hotline/leads", tokenValidator.validate, leads.list);
 app.delete("/hotline/leads", tokenValidator.validate, leads.delete);
+app.patch("/hotline/leads", tokenValidator.validate, leads.update);
 
 // Finance routes
 app.get(
