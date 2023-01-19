@@ -12,9 +12,6 @@ exports.create = async function (req, res) {
   const assignee = req.query.assignee ? req.query.assignee : req.email;
   const wants_to = req.query.wants_to ? req.query.wants_to : "";
   const block = req.query.block ? req.query.block : "";
-
-  req.query.block ? (body.block = req.query.block) : {};
-  req.query.wants_to ? (body.wants_to = req.query.wants_to) : {};
   const time = req.requestTime;
   if (name && phone_number && size && society && society) {
     let body = {
