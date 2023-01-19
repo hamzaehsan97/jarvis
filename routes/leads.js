@@ -45,7 +45,9 @@ exports.update = async function (req, res) {
   req.query.size ? (body.size = req.query.size) : {};
   req.query.phone_number ? (body.phone_number = req.query.phone_number) : {};
   req.query.assignee ? (body.assignee = req.query.assignee) : {};
-  req.query.type ? (body.query.type = req.query.type) : {};
+  req.query.type ? (body.type = req.query.type) : {};
+  req.query.block ? (body.block = req.query.block) : {};
+  req.query.wants_to ? (body.wants_to = req.query.wants_to) : {};
   body.lastUpdateTime = req.requestTime;
   try {
     const result = await MongoBot.Leads.updateLead(id, body);
