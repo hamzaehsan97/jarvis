@@ -111,6 +111,7 @@ app.post("/hotline/leads", tokenValidator.validate, leads.create);
 app.get("/hotline/leads", tokenValidator.validate, leads.list);
 app.delete("/hotline/leads", tokenValidator.validate, leads.delete);
 app.patch("/hotline/leads", tokenValidator.validate, leads.update);
+app.get("/hotline/employees", tokenValidator.validate, leads.employees);
 
 // Finance routes
 app.get(

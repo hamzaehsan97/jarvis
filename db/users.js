@@ -34,6 +34,20 @@ class Users {
     }
   }
 
+  async getHotlineEmployees(query) {
+    try {
+      let findings = await this.collection
+        .find(query)
+        .toArray()
+        .catch((error) => {
+          console.error(error);
+        });
+      return findings;
+    } catch (err) {
+      throw new err();
+    }
+  }
+
   async delUser(email) {
     const result = await this.collection
       .deleteOne({ email: email })

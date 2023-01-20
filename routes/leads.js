@@ -42,6 +42,37 @@ exports.list = async function (req, res) {
   res.send(result).end();
 };
 
+// get all hotline employees
+exports.employees = async function (req, res) {
+  let body = req.query;
+  body.role = "hotline_employee";
+  try {
+    const result = await MongoBot.Users.getHotlineEmployees(body);
+    if (result === undefined) {
+      res.status(404).send({ message: "user not found" }).end();
+    } else if (result.length === 0) {
+      res.status(404).json({
+        message: "no employees found with provided filters",
+      });
+    } else {
+      let employees = [];
+      result.forEach((employee) => {
+        employees.push({
+          first_name: employee.first_name,
+          last_name: employee.last_name,
+          email: employee.email,
+          phone_number: employee.phone_number,
+        });
+      });
+      res.send(employees).end();
+    }
+  } catch (ex) {
+    res.status(500).json({
+      message: "error in finding employees",
+    });
+  }
+};
+
 // update texties based on id
 exports.update = async function (req, res) {
   const id = req.query.id;
@@ -69,23 +100,11 @@ exports.update = async function (req, res) {
 
 // delete texties based on _id
 exports.delete = async function (req, res) {
-  const id = req.query.id;
-  const result = await MongoBot.Leads.delLead(id);
-  res.json({ leads_deleted: result }).end();
+  try {
+    const id = req.query.id;
+    const result = await MongoBot.Leads.delLead(id);
+    res.json({ leads_deleted: result }).end();
+  } catch (ex) {
+    res.status(500).json({ message: "error in deleting lead" });
+  }
 };
-
-// // get account secret
-// const get_secret = async function (req, res) {
-//   const user = req.email;
-//   const result = await MongoBot.Users.getUser(user);
-//   if (result === undefined) {
-//     res.status(404).send({ message: "user not found" }).end();
-//   } else {
-//     if (result.secret) {
-//       return result.secret;
-//     } else {
-//       res.status(404).send({ message: "secret not set for this user" }).end();
-//     }
-//     return false;
-//   }
-// };
