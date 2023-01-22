@@ -83,6 +83,7 @@ exports.update = async function (req, res) {
     ? (body.content = await encryption.encrypt(secret, req_data))
     : {};
   req.query.type ? (body.type = req.query.type) : {};
+  req.query.username ? (body.username = req.query.username) : {};
   req.query.portal ? (body.portal = req.query.portal) : {};
   body.lastUpdateTime = req.requestTime;
   body.email = req.email;
