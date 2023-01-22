@@ -25,6 +25,7 @@ exports.create = async function (req, res) {
   const user = req.email;
   const secret = await get_secret(req, res);
   const password = req.query.password;
+  const username = req.query.username ? req.query.username : "N/A";
   const time = req.requestTime;
   const date = dateUtil.getDate(time);
   const type = req.query.type ? req.query.type : "password";
@@ -34,6 +35,7 @@ exports.create = async function (req, res) {
     let body = {
       content: ciphertext,
       portal: portal,
+      username: username,
       type: type,
       creationTime: time,
       date: date,
