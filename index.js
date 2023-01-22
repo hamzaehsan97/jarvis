@@ -7,12 +7,14 @@ const users = require("./routes/users");
 const texties = require("./routes/texties");
 const services = require("./routes/services");
 const passwords = require("./routes/passwords");
-const leads = require("./routes/leads");
+const leads = require("./routes/hotline/leads");
+const employees = require("./routes/hotline/employees");
 const finance = require("./routes/finance");
 const tokenValidator = require("./middleware/auth_middleware");
 const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
+const role_middleware = require("./middleware/role_middleware");
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
@@ -107,11 +109,39 @@ app.delete(
 );
 
 // Hotline routes
-app.post("/hotline/leads", tokenValidator.validate, leads.create);
-app.get("/hotline/leads", tokenValidator.validate, leads.list);
-app.delete("/hotline/leads", tokenValidator.validate, leads.delete);
-app.patch("/hotline/leads", tokenValidator.validate, leads.update);
-app.get("/hotline/employees", tokenValidator.validate, leads.employees);
+app.post(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.create
+);
+app.get(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.list
+);
+app.delete(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.delete
+);
+app.patch(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.update
+);
+app.get(
+  "/hotline/employees",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  employees.getEmployees
+);
+app.post(
+  "/hotline/employees",
+  [
+    tokenValidator.validate,
+    role_middleware.role_check(["admin", "hotline_employee"]),
+  ],
+  employees.createEmployee
+);
 
 // Finance routes
 app.get(

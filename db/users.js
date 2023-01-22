@@ -5,6 +5,7 @@ class Users {
 
   async addUser(user) {
     try {
+      this.collection.createIndex({ email: 1 }, { unique: true });
       const newEntry = await this.collection.insertOne(user);
       return {
         status: 200,
@@ -12,10 +13,7 @@ class Users {
         new_Entry: newEntry,
       };
     } catch (err) {
-      return {
-        status: 400,
-        message: "invalid request exception",
-      };
+      throw new Error(err);
     }
   }
 
