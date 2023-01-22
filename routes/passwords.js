@@ -51,6 +51,7 @@ exports.create = async function (req, res) {
 // gets either all passwords
 exports.list = async function (req, res) {
   let key = req.query.key;
+  let correct_pin = false;
   delete req.query.key;
   req.query.email = req.email;
   req.query.portal = req.query.portal
@@ -63,6 +64,7 @@ exports.list = async function (req, res) {
       result.forEach(function (arr, index, item) {
         let decrypted = encryption.decrypt(arr.content, key);
         if (decrypted) {
+          correct_pin = true;
           arr.content = decrypted;
         }
       });
@@ -70,7 +72,7 @@ exports.list = async function (req, res) {
       console.log("incorrect pin provided");
     }
   }
-  res.send(result).end();
+  res.json({ correct_pin: correct_pin, result: result }).end();
 };
 
 // update texties based on id
