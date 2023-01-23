@@ -5,6 +5,7 @@ class Users {
 
   async addUser(user) {
     try {
+      this.collection.createIndex({ email: 1 }, { unique: true });
       const newEntry = await this.collection.insertOne(user);
       return {
         status: 200,
@@ -12,10 +13,7 @@ class Users {
         new_Entry: newEntry,
       };
     } catch (err) {
-      return {
-        status: 400,
-        message: "invalid request exception",
-      };
+      throw new Error(err);
     }
   }
 
@@ -29,6 +27,20 @@ class Users {
           console.error(error);
         });
       return findings[0];
+    } catch (err) {
+      throw new err();
+    }
+  }
+
+  async getHotlineEmployees(query) {
+    try {
+      let findings = await this.collection
+        .find(query)
+        .toArray()
+        .catch((error) => {
+          console.error(error);
+        });
+      return findings;
     } catch (err) {
       throw new err();
     }

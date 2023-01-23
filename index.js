@@ -7,11 +7,14 @@ const users = require("./routes/users");
 const texties = require("./routes/texties");
 const services = require("./routes/services");
 const passwords = require("./routes/passwords");
-const leads = require("./routes/leads");
+const leads = require("./routes/hotline/leads");
+const employees = require("./routes/hotline/employees");
 const finance = require("./routes/finance");
 const tokenValidator = require("./middleware/auth_middleware");
+const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
+const role_middleware = require("./middleware/role_middleware");
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
@@ -58,39 +61,101 @@ app.get("/auth", auth);
 app.post("/comms", tokenValidator.validate, communicate.send_email);
 
 // Textie routes
-app.post("/texties", tokenValidator.validate, texties.create);
-app.get("/texties", tokenValidator.validate, texties.list);
-app.patch("/texties", tokenValidator.validate, texties.update);
-app.delete("/texties", tokenValidator.validate, texties.delete);
+app.post(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.create
+);
+app.get(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.list
+);
+app.patch(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.update
+);
+app.delete(
+  "/texties",
+  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  texties.delete
+);
 
 // Services routes
 app.post("/services", tokenValidator.validate, services.activate_service);
 app.get("/services", tokenValidator.validate, services.read_services);
 
 // Passwords routes
-app.post("/passwords", tokenValidator.validate, passwords.create);
-app.get("/passwords", tokenValidator.validate, passwords.list);
-app.patch("/passwords", tokenValidator.validate, passwords.update);
-app.delete("/passwords", tokenValidator.validate, passwords.delete);
+app.post(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.create
+);
+app.get(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.list
+);
+app.patch(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.update
+);
+app.delete(
+  "/passwords",
+  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  passwords.delete
+);
 
 // Hotline routes
-app.post("/hotline/leads", tokenValidator.validate, leads.create);
-app.get("/hotline/leads", tokenValidator.validate, leads.list);
-app.delete("/hotline/leads", tokenValidator.validate, leads.delete);
+app.post(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.create
+);
+app.get(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.list
+);
+app.delete(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.delete
+);
+app.patch(
+  "/hotline/leads",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  leads.update
+);
+app.get(
+  "/hotline/employees",
+  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
+  employees.getEmployees
+);
+app.post(
+  "/hotline/employees",
+  [
+    tokenValidator.validate,
+    role_middleware.role_check(["admin", "hotline_employee"]),
+  ],
+  employees.createEmployee
+);
 
 // Finance routes
 app.get(
   "/finance/plaid/create_link_token",
-  tokenValidator.validate,
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.create_link_token
 );
 app.post(
   "/finance/plaid/set_access_token",
-  tokenValidator.validate,
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.set_access_token
 );
 app.get(
   "/finance/plaid/get_balance",
-  tokenValidator.validate,
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.get_balance
 );

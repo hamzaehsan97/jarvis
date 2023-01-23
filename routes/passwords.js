@@ -25,6 +25,7 @@ exports.create = async function (req, res) {
   const user = req.email;
   const secret = await get_secret(req, res);
   const password = req.query.password;
+  const username = req.query.username ? req.query.username : "N/A";
   const time = req.requestTime;
   const date = dateUtil.getDate(time);
   const type = req.query.type ? req.query.type : "password";
@@ -34,6 +35,7 @@ exports.create = async function (req, res) {
     let body = {
       content: ciphertext,
       portal: portal,
+      username: username,
       type: type,
       creationTime: time,
       date: date,
@@ -49,6 +51,7 @@ exports.create = async function (req, res) {
 // gets either all passwords
 exports.list = async function (req, res) {
   let key = req.query.key;
+  let correct_pin = false;
   delete req.query.key;
   req.query.email = req.email;
   req.query.portal = req.query.portal
@@ -61,6 +64,7 @@ exports.list = async function (req, res) {
       result.forEach(function (arr, index, item) {
         let decrypted = encryption.decrypt(arr.content, key);
         if (decrypted) {
+          correct_pin = true;
           arr.content = decrypted;
         }
       });
@@ -68,7 +72,7 @@ exports.list = async function (req, res) {
       console.log("incorrect pin provided");
     }
   }
-  res.send(result).end();
+  res.json({ correct_pin: correct_pin, result: result }).end();
 };
 
 // update texties based on id
@@ -81,6 +85,7 @@ exports.update = async function (req, res) {
     ? (body.content = await encryption.encrypt(secret, req_data))
     : {};
   req.query.type ? (body.type = req.query.type) : {};
+  req.query.username ? (body.username = req.query.username) : {};
   req.query.portal ? (body.portal = req.query.portal) : {};
   body.lastUpdateTime = req.requestTime;
   body.email = req.email;

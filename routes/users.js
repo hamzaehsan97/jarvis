@@ -46,6 +46,7 @@ const sendVerificationEmail = async (email) => {
     return mail;
   }
 };
+exports.sendVerificationEmail = sendVerificationEmail;
 
 // get user by email
 exports.read = async function (req, res) {
