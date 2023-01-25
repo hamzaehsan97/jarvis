@@ -1,6 +1,9 @@
 require("dotenv").config();
 const services = require("./services");
 const MongoBot = require("../db/mongo");
+const Encryption = require("../util/encryption");
+require("dotenv").config();
+
 const util = require("util");
 const {
   Configuration,
@@ -86,7 +89,10 @@ exports.set_access_token = async function (request, response, next) {
           //persist the token permanently
           const save_token = await MongoBot.BankAccounts.addAccessToken({
             email: request.email,
-            access_token: access_token,
+            access_token: await Encryption.encrypt(
+              process.env.AUTH_SECRET,
+              access_token
+            ),
             item_id: item_id,
           });
           if (save_token !== null) {
@@ -115,13 +121,17 @@ exports.set_access_token = async function (request, response, next) {
 
 const get_account_access_token = async function (email) {
   const finance_activated = await services.is_activated(email, SERVICE_NAME);
+  console.log("finance active = ", finance_activated);
   if (finance_activated) {
     const query = {
       email: email,
     };
     const results = await MongoBot.BankAccounts.findAccessToken(query);
     if (results.length > 0) {
-      return results[0].access_token;
+      return Encryption.decrypt(
+        results[0].access_token,
+        process.env.AUTH_SECRET
+      );
     } else {
       return false;
     }
@@ -133,7 +143,8 @@ const get_account_access_token = async function (email) {
 // Retrieve real-time Balances for each of an Item's accounts
 // https://plaid.com/docs/#balance
 exports.get_balance = async function (request, response, next) {
-  const account_token = get_account_access_token;
+  const account_token = await get_account_access_token(request.email);
+  // console.log(account_token);
   if (account_token) {
     Promise.resolve()
       .then(async function () {

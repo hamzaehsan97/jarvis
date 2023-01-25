@@ -58,7 +58,7 @@ exports.read_services = async function (req, res) {
 exports.is_activated = async function (email, service) {
   try {
     const user = await MongoBot.Users.getUser(email);
-    if (user && user.services.includes(service)) {
+    if (user && user.services[service] && user.services[service] === true) {
       return true;
     } else {
       return false;
