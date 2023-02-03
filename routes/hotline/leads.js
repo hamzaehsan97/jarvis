@@ -43,7 +43,7 @@ exports.create = async function (req, res) {
 
 const notify_lead_assigned = async function (body) {
   const lead =
-    "<br/><br>Name:</b> " +
+    "<br/><b>Name:</b> " +
     body.name +
     "<br/><b>Phone Number:</b> " +
     body.phone_number +
