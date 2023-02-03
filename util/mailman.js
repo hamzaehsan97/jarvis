@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-exports.send_mail = async function (receiver, subject, text) {
+exports.send_mail = async function (receiver, subject, text, html) {
   return new Promise((resolve, reject) => {
     let transporter = nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE,
@@ -16,6 +16,7 @@ exports.send_mail = async function (receiver, subject, text) {
       to: receiver,
       subject: subject,
       text: text,
+      html: text,
     };
 
     transporter.sendMail(mail_configs, function (error, info) {

@@ -43,7 +43,10 @@ exports.create = async function (req, res) {
 
 const notify_lead_assigned = async function (body) {
   const lead =
-    "Name: " + body.name + " <br/>Phone Number: " + body.phone_number;
+    "<br/><br>Name:<b/> " +
+    body.name +
+    "<br/><b>Phone Number:</b> " +
+    body.phone_number;
   const send_alert = await mailman.send_mail(
     body.assignee,
     constants.lead_assigned.subject + body.author,
@@ -85,6 +88,11 @@ exports.update = async function (req, res) {
     req.query.block ? (body.block = req.query.block) : {};
     req.query.wants_to ? (body.wants_to = req.query.wants_to) : {};
     body.lastUpdateTime = req.requestTime;
+    if (body.assignee) {
+      if (body.assignee != req.email) {
+        notify_lead_assigned(body);
+      }
+    }
     try {
       const result = await MongoBot.Leads.updateLead(id, body);
       res.send(result).end();
