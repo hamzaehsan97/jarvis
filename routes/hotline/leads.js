@@ -43,10 +43,24 @@ exports.create = async function (req, res) {
 
 const notify_lead_assigned = async function (body) {
   const lead =
-    "<br/><br>Name:<b/> " +
+    "<br/><br>Name:</b> " +
     body.name +
     "<br/><b>Phone Number:</b> " +
-    body.phone_number;
+    body.phone_number +
+    "<br/><b>Client Type:</b> " +
+    body.wants_to +
+    "<br/><b>Society:</b> " +
+    body.society +
+    "<br/><b>Block:</b> " +
+    body.block +
+    "<br/><b>Budget:</b> " +
+    body.budget +
+    "<br/><b>Created Time:</b> " +
+    body.creationTime +
+    "<br/><b>Author:</b> " +
+    body.author +
+    "<br/><b>Assigned To:</b> " +
+    body.assignee;
   await mailman.send_mail(
     body.assignee,
     constants.lead_assigned.subject + body.author,
