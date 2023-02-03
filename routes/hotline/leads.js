@@ -1,7 +1,8 @@
 "use strict";
 
 const MongoBot = require("../../db/mongo");
-
+const mailman = require("../../util/mailman");
+const constants = require("../../constants/comms_constants");
 // posts leads
 exports.create = async function (req, res) {
   try {
@@ -14,7 +15,6 @@ exports.create = async function (req, res) {
     const wants_to = req.query.wants_to ? req.query.wants_to : "";
     const block = req.query.block ? req.query.block : "";
     const time = req.requestTime;
-
     if (name && phone_number && size && society && society) {
       let body = {
         name: name,
@@ -28,6 +28,9 @@ exports.create = async function (req, res) {
         block: block,
         wants_to: wants_to,
       };
+      if (body.assignee !== req.email) {
+        notify_lead_assigned(body);
+      }
       let result = await MongoBot.Leads.addLead(body);
       res.send(result).end();
     } else {
@@ -36,6 +39,17 @@ exports.create = async function (req, res) {
   } catch (ex) {
     console.log("hotline leads create internal service exception", ex);
   }
+};
+
+const notify_lead_assigned = async function (body) {
+  const lead =
+    "Name: " + body.name + " <br/>Phone Number: " + body.phone_number;
+  const send_alert = await mailman.send_mail(
+    body.assignee,
+    constants.lead_assigned.subject + body.author,
+    constants.lead_assigned.text + lead
+  );
+  send_alert();
 };
 
 // gets either all texties or by filters
@@ -49,6 +63,10 @@ exports.list = async function (req, res) {
     let result = await MongoBot.Leads.findLeads(query);
     res.send(result).end();
   } catch (ex) {
+    res.json({
+      message: "hotline leads list internal service exception",
+      error: ex,
+    });
     console.log("hotline leads list internal service exception", ex);
   }
 };
