@@ -47,12 +47,11 @@ const notify_lead_assigned = async function (body) {
     body.name +
     "<br/><b>Phone Number:</b> " +
     body.phone_number;
-  const send_alert = await mailman.send_mail(
+  await mailman.send_mail(
     body.assignee,
     constants.lead_assigned.subject + body.author,
     constants.lead_assigned.text + lead
   );
-  send_alert();
 };
 
 // gets either all texties or by filters
