@@ -10,5 +10,5 @@ exports.verify_email = {
 };
 exports.lead_assigned = {
   subject: "New Lead Assigned by ",
-  text: "You have been assigned the following lead: <br/>",
+  text: "You have been assigned the following lead: ",
 };

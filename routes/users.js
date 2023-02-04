@@ -49,7 +49,7 @@ const sendVerificationEmail = async (email) => {
 exports.sendVerificationEmail = sendVerificationEmail;
 
 // get user by email
-exports.read = async function (req, res) {
+const read = async function (req, res) {
   let email = "";
   req.query.email ? (email = req.query.email) : (email = null);
   const result = await MongoBot.Users.getUser(email);
@@ -59,6 +59,7 @@ exports.read = async function (req, res) {
     res.send(result).end();
   }
 };
+exports.read = read;
 
 // update user
 exports.update = async function (req, res) {

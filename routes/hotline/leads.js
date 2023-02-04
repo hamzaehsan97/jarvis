@@ -3,27 +3,64 @@
 const MongoBot = require("../../db/mongo");
 const mailman = require("../../util/mailman");
 const constants = require("../../constants/comms_constants");
+const inputValidation = require("../../util/validation");
+const date = require("../../util/date");
+
+const budget_map = {
+  thousand: 1000,
+  lakh: 1000,
+  million: 1000000,
+  crore: 10000000,
+};
+
+const size_map = {
+  marla: 1,
+  kanal: 20,
+  acre: 160,
+};
+
 // posts leads
 exports.create = async function (req, res) {
   try {
-    const name = req.query.name;
+    const name = inputValidation.capitalize(req.query.name);
+    // validate phone number
+    inputValidation.phone_number_validate(req.query.phone_number);
     const phone_number = req.query.phone_number;
     const size = req.query.size ? req.query.size : -1;
-    const society = req.query.society ? req.query.society : "";
+    const society = req.query.society
+      ? inputValidation.capitalize(req.query.society)
+      : "";
     const budget = req.query.budget ? req.query.budget : -1;
+    const budget_unit = req.query.budget_unit ? req.query.budget_unit : "lakh";
+    const size_unit = req.query.size_unit ? req.query.size_unit : "marla";
     const assignee = req.query.assignee ? req.query.assignee : req.email;
     const wants_to = req.query.wants_to ? req.query.wants_to : "";
     const block = req.query.block ? req.query.block : "";
     const time = req.requestTime;
     if (name && phone_number && size && society && society) {
+      const budget_int = parseInt(budget) * budget_map[budget_unit];
+      const size_in_marla = parseInt(size) * size_map[size_unit];
       let body = {
         name: name,
         phone_number: phone_number,
-        size: size,
+        size: {
+          size_in_marla: size_in_marla,
+          size_string: size + " " + inputValidation.capitalize(size_unit),
+        },
         society: society,
-        author: req.email,
-        creationTime: time,
-        budget: budget,
+        author: req.user.first_name + " " + req.user.last_name,
+        creationTime: {
+          timestamp: time,
+          date: date.getDate(time),
+        },
+        budget: {
+          budget_string: budget_int
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+          budget_int: budget_int,
+          budget_with_unit:
+            budget + " " + inputValidation.capitalize(budget_unit),
+        },
         assignee: assignee,
         block: block,
         wants_to: wants_to,
@@ -37,13 +74,17 @@ exports.create = async function (req, res) {
       res.status(403).json({ message: "invalid request." });
     }
   } catch (ex) {
-    console.log("hotline leads create internal service exception", ex);
+    console.log(ex);
+    res.send({
+      error: ex,
+      message: "Error in creating new lead",
+    });
   }
 };
 
 const notify_lead_assigned = async function (body) {
   const lead =
-    "<br/><b>Name:</b> " +
+    "<br/><br/><b>Name:</b> " +
     body.name +
     "<br/><b>Phone Number:</b> " +
     body.phone_number +
@@ -51,21 +92,50 @@ const notify_lead_assigned = async function (body) {
     body.wants_to +
     "<br/><b>Society:</b> " +
     body.society +
+    "<br/><b>Size:</b> " +
+    body.size.size_string +
     "<br/><b>Block:</b> " +
     body.block +
     "<br/><b>Budget:</b> " +
-    body.budget +
+    body.budget.budget_with_unit +
     "<br/><b>Created Time:</b> " +
-    body.creationTime +
+    body.creationTime.date +
     "<br/><b>Author:</b> " +
     body.author +
     "<br/><b>Assigned To:</b> " +
     body.assignee;
+
+  const lead_sms =
+    "\n\nName : " +
+    body.name +
+    "\nPhone Number: " +
+    body.phone_number +
+    "\nClient Type: " +
+    body.wants_to +
+    "\nSociety: " +
+    body.society +
+    "\nBlock: " +
+    body.block +
+    "\nSize: " +
+    body.size.size_string +
+    "\nBudget: " +
+    body.budget.budget_with_unit +
+    "\nAuthor: " +
+    body.author;
   await mailman.send_mail(
     body.assignee,
     constants.lead_assigned.subject + body.author,
     constants.lead_assigned.text + lead
   );
+  const assigneeBody = await MongoBot.Users.getUser(body.assignee);
+  try {
+    await mailman.send_text(
+      assigneeBody.phone_number,
+      constants.lead_assigned.text + lead_sms
+    );
+  } catch (ex) {
+    console.log("Exception in sending text message", ex);
+  }
 };
 
 // gets either all texties or by filters
