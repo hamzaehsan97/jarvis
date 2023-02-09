@@ -5,10 +5,12 @@ const mailman = require("../util/mailman");
 const constants = require("../constants/comms_constants");
 const otp_check = require("../util/verify_otp");
 const encryption = require("../util/encryption");
+const validation = require("../util/validation");
 require("dotenv").config();
 
 // create user
 exports.create = async function (req, res) {
+  validation.phone_number_validate(req.query.phone_number);
   const user = {
     email: req.query.email,
     password: await encryption.encrypt(
