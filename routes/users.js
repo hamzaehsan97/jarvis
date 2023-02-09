@@ -38,7 +38,7 @@ exports.create = async function (req, res) {
       .status(400)
       .send({
         error: true,
-        message: "Error in creating new user. Review form paramters.",
+        message: "Error in creating new user. Review form parameters.",
       })
       .end();
   }
