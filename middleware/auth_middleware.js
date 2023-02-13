@@ -7,9 +7,10 @@ exports.validate = (req, res, next) => {
     console.log("token not in header, checking for token in parameters");
     token = req.query.token;
     if (!token) {
-      return res
-        .send("message: token is missing from header and parameters.")
-        .end();
+      res.json({
+        error: "accessDeniedException",
+        message: "Token is missing from request",
+      });
     }
   }
   try {
@@ -18,8 +19,11 @@ exports.validate = (req, res, next) => {
     req.email = user.email;
     next();
   } catch (err) {
-    console.log(err);
-    res.clearCookie("token").end();
-    throw new Error("Access denied exception. Token is expired.");
+    // console.log(err);
+    res.clearCookie("token");
+    res.json({
+      error: "accessDeniedException",
+      message: err,
+    });
   }
 };

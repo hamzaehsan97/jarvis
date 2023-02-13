@@ -5,30 +5,42 @@ const mailman = require("../util/mailman");
 const constants = require("../constants/comms_constants");
 const otp_check = require("../util/verify_otp");
 const encryption = require("../util/encryption");
+const validation = require("../util/validation");
 require("dotenv").config();
 
 // create user
 exports.create = async function (req, res) {
-  const user = {
-    email: req.query.email,
-    password: await encryption.encrypt(
-      process.env.AUTH_SECRET,
-      req.query.password
-    ),
-    first_name: req.query.first_name,
-    last_name: req.query.last_name,
-    phone_number: req.query.phone_number,
-    activated: false,
-  };
-  const result = await MongoBot.Users.addUser(user);
-  const verify = await sendVerificationEmail(req.query.email);
-  if (result.status == 200 && verify.status == 200) {
-    result.next = "Email verification sent to " + req.query.email;
-    res.send(result).end();
-  } else {
+  try {
+    validation.phone_number_validate(req.query.phone_number);
+    const user = {
+      email: req.query.email,
+      password: await encryption.encrypt(
+        process.env.AUTH_SECRET,
+        req.query.password
+      ),
+      first_name: req.query.first_name,
+      last_name: req.query.last_name,
+      phone_number: req.query.phone_number,
+      activated: false,
+    };
+    const result = await MongoBot.Users.addUser(user);
+    const verify = await sendVerificationEmail(req.query.email);
+    if (result.status == 200 && verify.status == 200) {
+      result.next = "Email verification sent to " + req.query.email;
+      res.send(result).end();
+    } else {
+      res
+        .status(403)
+        .send({ message: "Invalid request. User not created successfully" });
+    }
+  } catch (ex) {
     res
-      .status(403)
-      .send({ message: "Invalid request. User not created successfully" });
+      .status(400)
+      .send({
+        error: true,
+        message: "Error in creating new user. Review form parameters.",
+      })
+      .end();
   }
 };
 
@@ -49,7 +61,7 @@ const sendVerificationEmail = async (email) => {
 exports.sendVerificationEmail = sendVerificationEmail;
 
 // get user by email
-exports.read = async function (req, res) {
+const read = async function (req, res) {
   let email = "";
   req.query.email ? (email = req.query.email) : (email = null);
   const result = await MongoBot.Users.getUser(email);
@@ -59,6 +71,7 @@ exports.read = async function (req, res) {
     res.send(result).end();
   }
 };
+exports.read = read;
 
 // update user
 exports.update = async function (req, res) {

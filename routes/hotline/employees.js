@@ -30,7 +30,7 @@ exports.getEmployees = async function (req, res) {
     }
   } catch (ex) {
     res.status(500).json({
-      message: "error in finding employees",
+      message: "Hotline employee list internal service exception",
     });
   }
 };
@@ -61,7 +61,7 @@ exports.createEmployee = async function (req, res) {
         .send({ message: "Invalid request. User not created successfully" });
     }
   } catch (ex) {
-    console.log("Exception while creating employee", ex);
+    console.log("Hotline employee create employee exception", ex);
     res
       .status(500)
       .json({

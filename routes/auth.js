@@ -16,7 +16,8 @@ module.exports = async (req, res) => {
       .status(404)
       .clearCookie("token")
       .send({
-        error: "access denied exception. Incorrect username.",
+        error: true,
+        message: "access denied exception. Incorrect username.",
       })
       .end();
   } else if (decrypted_password !== password) {
@@ -24,7 +25,8 @@ module.exports = async (req, res) => {
       .status(403)
       .clearCookie("token")
       .send({
-        error: "access denied exception. Invalid username or login.",
+        error: true,
+        message: "access denied exception. Invalid username or login.",
       })
       .end();
   } else if (user.activated === false) {
@@ -32,6 +34,7 @@ module.exports = async (req, res) => {
       .status(405)
       .clearCookie("token")
       .send({
+        error: true,
         message:
           "User is not verified yet. Please check account verification email or request account verification.",
       })

@@ -4,3 +4,11 @@ const getDate = function (timestamp) {
   return date;
 };
 exports.getDate = getDate;
+
+// eventual goal is to localize datestamp by request locale
+const getYear = function (timestamp) {
+  let year = new Date(timestamp).toLocaleDateString("en-US");
+  year = year.split("/")[2];
+  return year;
+};
+exports.getYear = getYear;

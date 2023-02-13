@@ -155,7 +155,24 @@ app.post(
   finance.set_access_token
 );
 app.get(
-  "/finance/plaid/get_balance",
+  "/finance/balance",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.get_balance
+);
+app.post(
+  "/finance/liabilities",
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
+  finance.update_liabilities
+);
+
+app.patch(
+  "/finance/liabilities",
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
+  finance.get_items
+);
+
+app.get(
+  "/finance/reports/liabilities",
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
+  finance.createLiabilitiesReport
 );
