@@ -172,7 +172,7 @@ app.patch(
 );
 
 app.get(
-  "/finance/reports/liabilities",
+  "/finance/report",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.createLiabilitiesReport
+  finance.get_items
 );
