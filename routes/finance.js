@@ -165,7 +165,7 @@ const get_items = async function (request, response, args) {
   if (
     args.type === "liabilities" ||
     args.type === "assets" ||
-    args.type === "liabilities_report"
+    args.type === "finance_report"
   ) {
     function_check = true;
   }
@@ -216,7 +216,7 @@ const update_liabilities = async function (request, response, next) {
       for (const account_token of account_tokens) {
         if (account_token) {
           const poop = async function () {
-            console.log("getting liabilities for user ", request.email);
+            console.log("getting liabilities for user ", account_token);
             const liabilitiesResponse = await client.liabilitiesGet({
               access_token: account_token,
             });
@@ -262,10 +262,14 @@ const update_liabilities = async function (request, response, next) {
     return liabilities_list;
   };
   const return_body = await get_all_liabilities();
-  response.json({
-    error: null,
-    liabilities: return_body,
-  });
+  if (next.internal) {
+    return return_body;
+  } else {
+    response.json({
+      error: null,
+      liabilities: return_body,
+    });
+  }
 };
 
 exports.update_liabilities = update_liabilities;
@@ -314,19 +318,25 @@ const persist_items = async function (req, res, type, bodies) {
   return saved;
 };
 
-const createLiabilitiesReport = async function (request, response) {
+const createLiabilitiesReport = async function (request, response, next) {
+  const run_liabilities_update = await update_liabilities(request, response, {
+    internal: true,
+  });
+  console.log("ran liabilities update", run_liabilities_update);
   const liabilities_list = await get_items(request, response, {
     type: "liabilities",
   });
   const curr_report = await get_items(request, response, {
-    type: "liabilities_report",
+    type: "finance_report",
   });
-  // If a liability report does not exist, initialize a liability report
   let total_liabilities_balance = 0;
   let total_last_payments = 0;
+  let sum_assets = 0;
   const date = dateUtil.getDate(request.requestTime);
 
+  // If a liability report does not exist, initialize a liability report
   if (curr_report.length < 1) {
+    // Collect liabilities information
     for (const liability in liabilities_list) {
       console.log(
         "liability.current_balance",
@@ -347,10 +357,15 @@ const createLiabilitiesReport = async function (request, response) {
         day: date.split("/")[0],
         timestamp: request.requestTime,
       },
-      item_type: "liabilities_report",
+      item_type: "finance_report",
       lastUpdate: dateUtil.getDate(request.requestTime),
-      liabilities_balance: total_liabilities_balance,
-      last_payment: total_last_payments,
+      liabilities: {
+        liabilities_balance: total_liabilities_balance,
+        last_payment: total_last_payments,
+      },
+      assets: {
+        total_assets: sum_assets,
+      },
       records: [
         {
           creationTime: {
@@ -360,20 +375,23 @@ const createLiabilitiesReport = async function (request, response) {
             day: date.split("/")[0],
             timestamp: request.requestTime,
           },
-          liabilities_balance: total_liabilities_balance,
-          last_payment: total_last_payments,
+          liabilities: {
+            liabilities_balance: total_liabilities_balance,
+            last_payment: total_last_payments,
+          },
+          assets: {
+            total_assets: sum_assets,
+          },
+          records: [],
         },
       ],
     };
-    await persist_items(request, response, "liabilities_report", [body]);
+    await persist_items(request, response, "finance_report", [body]);
   } else {
     let total_liabilities_balance = 0;
     let total_last_payments = 0;
+    let sum_assets = 0;
     for (const liability in liabilities_list) {
-      console.log(
-        "liability.current_balance",
-        liabilities_list[liability].current_balance
-      );
       total_liabilities_balance =
         total_liabilities_balance + liabilities_list[liability].current_balance;
       total_last_payments =
@@ -381,8 +399,10 @@ const createLiabilitiesReport = async function (request, response) {
         liabilities_list[liability].records[0].last_payment;
     }
     let report = curr_report[0];
-    report.liabilities_balance = total_liabilities_balance;
-    report.last_payment = total_last_payments;
+    report.liabilities["liabilities_balance"] = total_liabilities_balance;
+    report.liabilities["last_payment"] = total_last_payments;
+    report.assets["total_assets"] = sum_assets;
+    report.lastUpdate = dateUtil.getDate(request.requestTime);
     let latest_records = report.records;
     latest_records.push({
       creationTime: {
@@ -392,15 +412,20 @@ const createLiabilitiesReport = async function (request, response) {
         day: date.split("/")[0],
         timestamp: request.requestTime,
       },
-      liabilities_balance: total_liabilities_balance,
-      last_payment: total_last_payments,
+      liabilities: {
+        liabilities_balance: total_liabilities_balance,
+        last_payment: total_last_payments,
+      },
+      assets: {
+        total_assets: sum_assets,
+      },
     });
     report.records = latest_records;
     delete report.lastModified;
     await MongoBot.FinanceItems.updateItem(report._id, report);
   }
   const res = await get_items(request, response, {
-    type: "liabilities_report",
+    type: "finance_report",
   });
   response.send(res).end();
 };
