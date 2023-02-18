@@ -176,3 +176,9 @@ app.get(
   [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.get_items
 );
+
+app.get(
+  "/finance/generate_report",
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
+  finance.generateFinanceReport
+);

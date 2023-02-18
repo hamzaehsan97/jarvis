@@ -318,7 +318,7 @@ const persist_items = async function (req, res, type, bodies) {
   return saved;
 };
 
-const createLiabilitiesReport = async function (request, response, next) {
+const generateFinanceReport = async function (request, response, next) {
   const run_liabilities_update = await update_liabilities(request, response, {
     internal: true,
   });
@@ -438,4 +438,4 @@ const createLiabilitiesReport = async function (request, response, next) {
   response.send(res).end();
 };
 
-exports.createLiabilitiesReport = createLiabilitiesReport;
+exports.generateFinanceReport = generateFinanceReport;
