@@ -361,10 +361,13 @@ const createLiabilitiesReport = async function (request, response, next) {
       lastUpdate: dateUtil.getDate(request.requestTime),
       liabilities: {
         liabilities_balance: total_liabilities_balance,
+        prev_liabilities_balance: 0,
         last_payment: total_last_payments,
+        prev_last_payment: 0,
       },
       assets: {
         total_assets: sum_assets,
+        prev_total_assets: 0,
       },
       records: [
         {
@@ -399,8 +402,13 @@ const createLiabilitiesReport = async function (request, response, next) {
         liabilities_list[liability].records[0].last_payment;
     }
     let report = curr_report[0];
+    report.liabilities["prev_liabilities_balance"] =
+      report.liabilities["liabilities_balance"];
+    report.liabilities["prev_last_payment"] =
+      report.liabilities["last_payment"];
     report.liabilities["liabilities_balance"] = total_liabilities_balance;
     report.liabilities["last_payment"] = total_last_payments;
+    report.assets["prev_total_assets"] = report.assets["total_assets"];
     report.assets["total_assets"] = sum_assets;
     report.lastUpdate = dateUtil.getDate(request.requestTime);
     let latest_records = report.records;
