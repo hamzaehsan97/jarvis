@@ -17,6 +17,7 @@ const {
 const { v4: uuidv4 } = require("uuid");
 const { response } = require("express");
 const { report } = require("process");
+const { time } = require("console");
 const PLAID_PRODUCTS = process.env.PLAID_PRODUCTS.split(",");
 const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || "US").split(
   ","
@@ -160,7 +161,6 @@ const get_items = async function (request, response, args) {
     ? (body.item_type = args.type)
     : {};
   args.item_id ? (body.item_id = args.item_id) : {};
-  // console.log("body", body);
   const results = await MongoBot.FinanceItems.findItem(body);
   let function_check = false;
   if (
@@ -173,9 +173,29 @@ const get_items = async function (request, response, args) {
   if (function_check === true) {
     return results;
   }
+
+  // If the last time the report was run was more than 6 days, generate a new report for the user and send a message asking to refresh page.
+  let message = null;
+  if (results.length > 0) {
+    let timeDiff = request.requestTime - results[0].creationTime.timestamp;
+    timeDiff = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
+    console.log("Time diff in days", timeDiff);
+    if (timeDiff > 6) {
+      console.log(
+        "Generating a fresh financial report for user",
+        request.email
+      );
+      generateFinanceReport({ email: request.email, query: {} }, null, {
+        internal: true,
+      });
+      message =
+        "Report was last run a while back. Generating a new report for you. Refresh the page in a few moments";
+    }
+  }
   response
     ? response.json({
         response: results,
+        message: message,
       })
     : {};
 };
@@ -322,16 +342,22 @@ const persist_items = async function (req, res, type, bodies) {
 };
 
 const generateFinanceReport = async function (request, response, next) {
+  // Update recent liability report
   const run_liabilities_update = await update_liabilities(request, response, {
     internal: true,
   });
   console.log("ran liabilities update for user", request.email);
+
+  // Get updated list of liability
   const liabilities_list = await get_items(request, response, {
     type: "liabilities",
   });
+
+  // Get current finance report
   const curr_report = await get_items(request, response, {
     type: "finance_report",
   });
+
   let total_liabilities_balance = 0;
   let total_last_payments = 0;
   let sum_assets = 0;
