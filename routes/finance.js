@@ -189,7 +189,7 @@ const get_items = async function (request, response, args) {
         internal: true,
       });
       message =
-        "Report was last run a while back. Generating a new report for you. Refresh the page in a few moments";
+        "Generating a new report, refresh page to review latest report.";
     }
   }
   response

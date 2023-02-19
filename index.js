@@ -186,6 +186,8 @@ app.get(
 );
 
 // Scheduled tasks below using node-cron
+
+// Run finance report every sunday before midnight
 cron.schedule("59 23 * * 0", function () {
   console.log("running finance schedular");
   schedular.runFinanceReports();
