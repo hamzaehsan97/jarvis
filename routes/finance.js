@@ -149,6 +149,7 @@ const get_account_access_token = async function (email) {
     return false;
   }
 };
+exports.get_account_access_tokens = get_account_access_token;
 
 const get_items = async function (request, response, args) {
   const body = {};
@@ -159,7 +160,7 @@ const get_items = async function (request, response, args) {
     ? (body.item_type = args.type)
     : {};
   args.item_id ? (body.item_id = args.item_id) : {};
-  console.log("body", body);
+  // console.log("body", body);
   const results = await MongoBot.FinanceItems.findItem(body);
   let function_check = false;
   if (
@@ -216,7 +217,7 @@ const update_liabilities = async function (request, response, next) {
       for (const account_token of account_tokens) {
         if (account_token) {
           const poop = async function () {
-            console.log("getting liabilities for user ", account_token);
+            // console.log("getting liabilities for user ", account_token);
             const liabilitiesResponse = await client.liabilitiesGet({
               access_token: account_token,
             });
@@ -227,6 +228,8 @@ const update_liabilities = async function (request, response, next) {
               balance = balance + credit.last_statement_balance;
               last_payment = last_payment + credit.last_payment_amount;
             });
+            last_payment = Math.round(last_payment);
+            balance = Math.round(balance);
             const total_last_payment = last_payment;
             const total_balance = balance;
             let liabilities_body = {
@@ -282,16 +285,16 @@ const persist_items = async function (req, res, type, bodies) {
     args.item_id = body.item_id;
     const current_items = await get_items(req, res, args);
     if (current_items.length > 0 && current_items.length < 2) {
-      console.log(
-        "item record already exists for user ",
-        req.email,
-        ". Updating user finance item now."
-      );
+      // console.log(
+      //   "item record already exists for user ",
+      //   req.email,
+      //   ". Updating user finance item now."
+      // );
       let liabilities_timeline = current_items[0].records;
-      console.log(
-        "This is the current length of records for this item before update = ",
-        liabilities_timeline.length
-      );
+      // console.log(
+      //   "This is the current length of records for this item before update = ",
+      //   liabilities_timeline.length
+      // );
       liabilities_timeline.push(body.records[0]);
       body.current_balance = body.current_balance;
       body.records = liabilities_timeline;
@@ -322,7 +325,7 @@ const generateFinanceReport = async function (request, response, next) {
   const run_liabilities_update = await update_liabilities(request, response, {
     internal: true,
   });
-  console.log("ran liabilities update", run_liabilities_update);
+  console.log("ran liabilities update for user", request.email);
   const liabilities_list = await get_items(request, response, {
     type: "liabilities",
   });
@@ -435,7 +438,7 @@ const generateFinanceReport = async function (request, response, next) {
   const res = await get_items(request, response, {
     type: "finance_report",
   });
-  response.send(res).end();
+  return true;
 };
 
 exports.generateFinanceReport = generateFinanceReport;

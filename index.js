@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const cron = require("node-cron");
 const path = require("path");
 const communicate = require("./routes/communicate");
 const auth = require("./routes/auth");
@@ -15,6 +16,7 @@ const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
 const role_middleware = require("./middleware/role_middleware");
+const schedular = require("./util/schedular");
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
@@ -182,3 +184,9 @@ app.get(
   [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.generateFinanceReport
 );
+
+// Scheduled tasks below using node-cron
+cron.schedule("59 23 * * 0", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
