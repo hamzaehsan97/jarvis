@@ -1,5 +1,5 @@
-const MongoBot = require("../db/mongo");
-const finance = require("../routes/finance");
+const MongoBot = require("./db/mongo");
+const finance = require("./routes/finance");
 //Find all users with finance services activate
 //Check if they have a bank account connected
 
