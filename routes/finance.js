@@ -207,27 +207,12 @@ const get_items = async function (request, response, args) {
 
 exports.get_items = get_items;
 
-const get_items_internal = async function (request, response, args) {
+const get_items_internal = async function (email, item_type) {
   const body = {};
-  body.email = request.email;
-  request.query.item_type
-    ? (body.item_type = request.query.item_type)
-    : args.type
-    ? (body.item_type = args.type)
-    : {};
-  args.item_id ? (body.item_id = args.item_id) : {};
+  body.email = email;
+  body.item_type = item_type;
   const results = await MongoBot.FinanceItems.findItem(body);
-  let function_check = false;
-  if (
-    args.type === "liabilities" ||
-    args.type === "assets" ||
-    args.type === "finance_report"
-  ) {
-    function_check = true;
-  }
-  if (function_check === true) {
-    return results;
-  }
+  return results;
 };
 
 exports.get_items_internal = get_items_internal;
@@ -370,14 +355,13 @@ const generateFinanceReport = async function (request, response, next) {
   console.log("ran liabilities update for user", request.email);
 
   // Get updated list of liability
-  const liabilities_list = await get_items_internal(request, response, {
-    type: "liabilities",
-  });
+  const liabilities_list = await get_items_internal(
+    request.email,
+    "liabilities"
+  );
 
   // Get current finance report
-  const curr_report = await get_items_internal(request, response, {
-    type: "finance_report",
-  });
+  const curr_report = await get_items_internal(request.email, "finance_report");
 
   let total_liabilities_balance = 0;
   let total_last_payments = 0;
