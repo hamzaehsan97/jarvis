@@ -177,7 +177,7 @@ const get_items = async function (request, response, args) {
   // If the last time the report was run was more than 6 days, generate a new report for the user and send a message asking to refresh page.
   let message = null;
   if (results.length > 0) {
-    let timeDiff = request.requestTime - results[0].creationTime.timestamp;
+    let timeDiff = Date.now() - results[0].creationTime.timestamp;
     timeDiff = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
     console.log("Time diff in days", timeDiff);
     if (timeDiff > 6) {
@@ -246,7 +246,7 @@ const update_liabilities = async function (request, response, next) {
             const liabilitiesResponse = await client.liabilitiesGet({
               access_token: account_token,
             });
-            const date = dateUtil.getDate(request.requestTime);
+            const date = dateUtil.getDate(Date.now());
             let balance = 0;
             let last_payment = 0;
             liabilitiesResponse.data.liabilities.credit.forEach((credit) => {
@@ -269,7 +269,7 @@ const update_liabilities = async function (request, response, next) {
                     year: date.split("/")[2],
                     month: date.split("/")[1],
                     day: date.split("/")[0],
-                    timestamp: request.requestTime,
+                    timestamp: Date.now(),
                   },
                   balance: total_balance,
                   last_payment: total_last_payment,
@@ -357,7 +357,7 @@ const generateFinanceReport = async function (request, response, next) {
   let total_liabilities_balance = 0;
   let total_last_payments = 0;
   let sum_assets = 0;
-  const date = dateUtil.getDate(request.requestTime);
+  const date = dateUtil.getDate(Date.now());
 
   // If a liability report does not exist, initialize a liability report
   if (curr_report.length < 1) {
@@ -380,10 +380,10 @@ const generateFinanceReport = async function (request, response, next) {
         year: date.split("/")[2],
         month: date.split("/")[1],
         day: date.split("/")[0],
-        timestamp: request.requestTime,
+        timestamp: Date.now(),
       },
       item_type: "finance_report",
-      lastUpdate: dateUtil.getDate(request.requestTime),
+      lastUpdate: dateUtil.getDate(Date.now()),
       liabilities: {
         liabilities_balance: total_liabilities_balance,
         prev_liabilities_balance: 0,
@@ -401,7 +401,7 @@ const generateFinanceReport = async function (request, response, next) {
             year: date.split("/")[2],
             month: date.split("/")[1],
             day: date.split("/")[0],
-            timestamp: request.requestTime,
+            timestamp: Date.now(),
           },
           liabilities: {
             liabilities_balance: total_liabilities_balance,
@@ -435,7 +435,7 @@ const generateFinanceReport = async function (request, response, next) {
     report.liabilities["last_payment"] = total_last_payments;
     report.assets["prev_total_assets"] = report.assets["total_assets"];
     report.assets["total_assets"] = sum_assets;
-    report.lastUpdate = dateUtil.getDate(request.requestTime);
+    report.lastUpdate = dateUtil.getDate(Date.now());
     let latest_records = report.records;
     latest_records.push({
       creationTime: {
@@ -443,7 +443,7 @@ const generateFinanceReport = async function (request, response, next) {
         year: date.split("/")[2],
         month: date.split("/")[1],
         day: date.split("/")[0],
-        timestamp: request.requestTime,
+        timestamp: Date.now(),
       },
       liabilities: {
         liabilities_balance: total_liabilities_balance,
