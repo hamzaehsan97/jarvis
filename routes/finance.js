@@ -103,6 +103,13 @@ exports.set_access_token = async function (request, response, next) {
             // item_id: await Encryption.encrypt(process.env.AUTH_SECRET, item_id),
           });
           if (save_token !== null) {
+            console.log(
+              "Generating a fresh financial report for user",
+              request.email
+            );
+            generateFinanceReport({ email: request.email, query: {} }, null, {
+              internal: true,
+            });
             response.json({
               message: "Bank account connected successfully",
               item_id: "Item id created",
