@@ -207,6 +207,31 @@ const get_items = async function (request, response, args) {
 
 exports.get_items = get_items;
 
+const get_items_internal = async function (request, response, args) {
+  const body = {};
+  body.email = request.email;
+  request.query.item_type
+    ? (body.item_type = request.query.item_type)
+    : args.type
+    ? (body.item_type = args.type)
+    : {};
+  args.item_id ? (body.item_id = args.item_id) : {};
+  const results = await MongoBot.FinanceItems.findItem(body);
+  let function_check = false;
+  if (
+    args.type === "liabilities" ||
+    args.type === "assets" ||
+    args.type === "finance_report"
+  ) {
+    function_check = true;
+  }
+  if (function_check === true) {
+    return results;
+  }
+};
+
+exports.get_items_internal = get_items_internal;
+
 // Retrieve real-time Balances for each of an Item's accounts
 // https://plaid.com/docs/#balance
 exports.get_balance = async function (request, response, next) {
@@ -345,12 +370,12 @@ const generateFinanceReport = async function (request, response, next) {
   console.log("ran liabilities update for user", request.email);
 
   // Get updated list of liability
-  const liabilities_list = await get_items(request, response, {
+  const liabilities_list = await get_items_internal(request, response, {
     type: "liabilities",
   });
 
   // Get current finance report
-  const curr_report = await get_items(request, response, {
+  const curr_report = await get_items_internal(request, response, {
     type: "finance_report",
   });
 
@@ -457,7 +482,7 @@ const generateFinanceReport = async function (request, response, next) {
     delete report.lastModified;
     await MongoBot.FinanceItems.updateItem(report._id, report);
   }
-  const res = await get_items(request, response, {
+  const res = await get_items_internal(request, response, {
     type: "finance_report",
   });
   return true;
