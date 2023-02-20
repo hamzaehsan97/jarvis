@@ -305,26 +305,17 @@ const persist_items = async function (req, res, type, bodies) {
     args.item_id = body.item_id;
     const current_items = await get_items(req, res, args);
     if (current_items.length > 0 && current_items.length < 2) {
-      // console.log(
-      //   "item record already exists for user ",
-      //   req.email,
-      //   ". Updating user finance item now."
-      // );
       let liabilities_timeline = current_items[0].records;
-      // console.log(
-      //   "This is the current length of records for this item before update = ",
-      //   liabilities_timeline.length
-      // );
       liabilities_timeline.push(body.records[0]);
       body.current_balance = body.current_balance;
       body.records = liabilities_timeline;
-      body.lastUpdate = dateUtil.getDate(req.requestTime);
+      body.lastUpdate = dateUtil.getDate(Date.now());
       MongoBot.FinanceItems.updateItem(current_items[0]._id, body);
     } else {
       try {
         bodies.forEach(async (body) => {
           console.log("persisting finance data for user ", body.email);
-          body.creationDate = dateUtil.getDate(req.requestTime);
+          body.creationDate = dateUtil.getDate(Date.now());
           const response = await MongoBot.FinanceItems.addItem(body);
           if (response === undefined || response === null) {
             saved = false;
