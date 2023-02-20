@@ -191,6 +191,11 @@ const get_items = async function (request, response, args) {
       message =
         "Generating a new report, refresh page to review latest report.";
     }
+  } else if (results.length == 0) {
+    generateFinanceReport({ email: request.email, query: {} }, null, {
+      internal: true,
+    });
+    message = "Generating a new report, refresh page to review latest report.";
   }
   response
     ? response.json({
