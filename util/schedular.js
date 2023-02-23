@@ -26,7 +26,7 @@ exports.runFinanceReports = async function () {
       "\n"
     );
     await mailman.send_mail(
-      body.user,
+      user,
       constants.scheduled_finance_report.subject,
       constants.scheduled_finance_report.text
     );
