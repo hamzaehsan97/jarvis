@@ -1,5 +1,7 @@
 const MongoBot = require("../db/mongo");
 const finance = require("../routes/finance");
+const mailman = require("../util/mailman");
+const constants = require("../constants/comms_constants");
 //Find all users with finance services activate
 //Check if they have a bank account connected
 
@@ -22,6 +24,11 @@ exports.runFinanceReports = async function () {
         internal: true,
       }),
       "\n"
+    );
+    await mailman.send_mail(
+      body.user,
+      constants.scheduled_finance_report.subject,
+      constants.scheduled_finance_report.text
     );
   });
 };
