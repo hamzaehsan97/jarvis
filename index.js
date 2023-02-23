@@ -291,3 +291,7 @@ cron.schedule("00 23 * * *", function () {
   console.log("running finance schedular");
   schedular.runFinanceReports();
 });
+cron.schedule("30 23 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
