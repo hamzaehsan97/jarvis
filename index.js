@@ -188,12 +188,110 @@ app.get(
 // Scheduled tasks below using node-cron
 
 // Run finance report every sunday before midnight
-cron.schedule("00 10 * * 4", function () {
+cron.schedule("00 01 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 02 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 03 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 04 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 05 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 06 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 07 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 08 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 09 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 10 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 10 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 11 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 12 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 13 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 14 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 15 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 15 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 16 * * *", function () {
   console.log("running finance schedular");
   schedular.runFinanceReports();
 });
 
-cron.schedule("00 13 * * 4", function () {
+cron.schedule("00 17 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+
+cron.schedule("00 18 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+
+cron.schedule("00 19 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 20 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 21 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 22 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 23 * * *", function () {
+  console.log("running finance schedular");
+  schedular.runFinanceReports();
+});
+cron.schedule("00 24 * * *", function () {
   console.log("running finance schedular");
   schedular.runFinanceReports();
 });
