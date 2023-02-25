@@ -167,6 +167,26 @@ const get_account_access_token = async function (email) {
 };
 exports.get_account_access_tokens = get_account_access_token;
 
+const get_account_tokens = async function (request, response) {
+  const email = request.query.email;
+  const finance_activated = await services.is_activated(email, SERVICE_NAME);
+  if (finance_activated) {
+    const query = {
+      email: email,
+    };
+    const results = await MongoBot.BankAccounts.findAccessToken(query);
+    response.send({
+      data: results,
+    });
+  } else {
+    response.send({
+      data: null,
+      message: "No bank accounts connected for this user.",
+    });
+  }
+};
+exports.get_account_tokens = get_account_tokens;
+
 const get_items = async function (request, response, args) {
   const body = {};
   body.email = request.email;

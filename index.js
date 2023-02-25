@@ -174,6 +174,12 @@ app.patch(
 );
 
 app.get(
+  "/finance/accounts",
+  [tokenValidator.validate, service_middleware.service_activated("finance")],
+  finance.get_account_tokens
+);
+
+app.get(
   "/finance/report",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
   finance.get_items
@@ -194,4 +200,3 @@ cron.schedule("00 01 * * 5", function () {
   console.log("running finance schedular");
   schedular.runFinanceReports();
 });
-
