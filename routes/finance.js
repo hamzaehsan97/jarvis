@@ -93,8 +93,16 @@ exports.set_access_token = async function (request, response, next) {
         item_id = tokenResponse.data.item_id;
         if (access_token && item_id) {
           //persist the token permanently
+          const date = dateUtil.getDate(Date.now());
           const save_token = await MongoBot.BankAccounts.addAccessToken({
             email: request.email,
+            creationTime: {
+              date: date,
+              year: date.split("/")[2],
+              month: date.split("/")[1],
+              day: date.split("/")[0],
+              timestamp: Date.now(),
+            },
             access_token: await Encryption.encrypt(
               process.env.AUTH_SECRET,
               access_token
