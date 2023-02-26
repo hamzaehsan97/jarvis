@@ -122,7 +122,7 @@ app.patch(
   [
     tokenValidator.validate,
     service_middleware.service_activated("passwords"),
-    validator.validate(["email", "otp", "password"]),
+    validator.validate(["id", "content"]),
   ],
   passwords.update
 );
