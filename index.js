@@ -17,6 +17,7 @@ const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
 const role_middleware = require("./middleware/role_middleware");
 const schedular = require("./util/schedular");
+const validator = require("./middleware/validation");
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
@@ -49,15 +50,28 @@ app.post("/users", users_middleware.createUser, users.create);
 app.get("/users", tokenValidator.validate, users.read);
 app.patch("/users", tokenValidator.validate, users.update);
 app.delete("/users", tokenValidator.validate, users.delete); //delete user funtionality (Should only be available for admins)
-app.post("/users/verify", users.verify_account); //verify user account with email and otp
-app.patch("/users/otp", users.create_otp); //create a new otp code for the user
-app.get("/users/otp", users.verify_otp); //verify user otp
-app.patch("/users/password", users.update_password); //update user password, otp required
-app.post("/users/secret", tokenValidator.validate, users.set_secret); //update user secret
+app.post(
+  "/users/verify",
+  validator.validate(["email", "otp"]),
+  users.verify_account
+); //verify user account with email and otp
+app.patch("/users/otp", validator.validate(["email"]), users.create_otp); //create a new otp code for the user
+app.get("/users/otp", validator.validate(["email", "otp"]), users.verify_otp); //verify user otp
+app.patch(
+  "/users/password",
+  validator.validate(["email", "otp", "password"]),
+  users.update_password
+); //update user password, otp required
+app.post(
+  "/users/secret",
+  validator.validate(["secret"]),
+  tokenValidator.validate,
+  users.set_secret
+); //update user secret
 app.get("/users/logout", users.logout);
 
 // Auth routes
-app.get("/auth", auth);
+app.get("/auth", validator.validate(["email", "password"]), auth);
 
 // Comms routes
 app.post("/comms", tokenValidator.validate, communicate.send_email);
@@ -85,7 +99,11 @@ app.delete(
 );
 
 // Services routes
-app.post("/services", tokenValidator.validate, services.activate_service);
+app.post(
+  "/services",
+  [tokenValidator.validate, validator.validate(["service", "active"])],
+  services.activate_service
+);
 app.get("/services", tokenValidator.validate, services.read_services);
 
 // Passwords routes
@@ -101,7 +119,11 @@ app.get(
 );
 app.patch(
   "/passwords",
-  [tokenValidator.validate, service_middleware.service_activated("passwords")],
+  [
+    tokenValidator.validate,
+    service_middleware.service_activated("passwords"),
+    validator.validate(["email", "otp", "password"]),
+  ],
   passwords.update
 );
 app.delete(
@@ -192,8 +214,6 @@ app.get(
 );
 
 // Scheduled tasks below using node-cron
-
-// Run finance report every sunday before midnight
 
 // Run report at 1:00 am UTC Friday => 5:00 pm PST on Thursday
 cron.schedule("00 01 * * 5", function () {

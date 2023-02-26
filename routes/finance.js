@@ -169,7 +169,6 @@ exports.get_account_access_tokens = get_account_access_token;
 
 const get_account_tokens = async function (request, response) {
   const email = request.email;
-  console.log("EMAIL", email);
   const finance_activated = await services.is_activated(email, SERVICE_NAME);
   if (finance_activated) {
     const query = {
