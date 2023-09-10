@@ -332,8 +332,9 @@ const update_liabilities = async function (request, response, next) {
         }
       }
     }
-    return liabilities_list;
+    return liabilities_list.slice(-10);
   };
+
   const return_body = await get_all_liabilities();
   if (next.internal) {
     return return_body;
