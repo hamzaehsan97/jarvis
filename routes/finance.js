@@ -17,6 +17,7 @@ const {
 const { v4: uuidv4 } = require("uuid");
 const { response } = require("express");
 const { report } = require("process");
+const { time } = require("console");
 const PLAID_PRODUCTS = process.env.PLAID_PRODUCTS.split(",");
 const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || "US").split(
   ","
@@ -92,8 +93,16 @@ exports.set_access_token = async function (request, response, next) {
         item_id = tokenResponse.data.item_id;
         if (access_token && item_id) {
           //persist the token permanently
+          const date = dateUtil.getDate(Date.now());
           const save_token = await MongoBot.BankAccounts.addAccessToken({
             email: request.email,
+            creationTime: {
+              date: date,
+              year: date.split("/")[2],
+              month: date.split("/")[1],
+              day: date.split("/")[0],
+              timestamp: Date.now(),
+            },
             access_token: await Encryption.encrypt(
               process.env.AUTH_SECRET,
               access_token
@@ -102,6 +111,13 @@ exports.set_access_token = async function (request, response, next) {
             // item_id: await Encryption.encrypt(process.env.AUTH_SECRET, item_id),
           });
           if (save_token !== null) {
+            console.log(
+              "Generating a fresh financial report for user",
+              request.email
+            );
+            generateFinanceReport({ email: request.email, query: {} }, null, {
+              internal: true,
+            });
             response.json({
               message: "Bank account connected successfully",
               item_id: "Item id created",
@@ -149,6 +165,27 @@ const get_account_access_token = async function (email) {
     return false;
   }
 };
+exports.get_account_access_tokens = get_account_access_token;
+
+const get_account_tokens = async function (request, response) {
+  const email = request.email;
+  const finance_activated = await services.is_activated(email, SERVICE_NAME);
+  if (finance_activated) {
+    const query = {
+      email: email,
+    };
+    const results = await MongoBot.BankAccounts.findAccessToken(query);
+    response.send({
+      data: results,
+    });
+  } else {
+    response.send({
+      data: null,
+      message: "No bank accounts connected for this user.",
+    });
+  }
+};
+exports.get_account_tokens = get_account_tokens;
 
 const get_items = async function (request, response, args) {
   const body = {};
@@ -159,27 +196,61 @@ const get_items = async function (request, response, args) {
     ? (body.item_type = args.type)
     : {};
   args.item_id ? (body.item_id = args.item_id) : {};
-  console.log("body", body);
   const results = await MongoBot.FinanceItems.findItem(body);
   let function_check = false;
   if (
     args.type === "liabilities" ||
     args.type === "assets" ||
-    args.type === "liabilities_report"
+    args.type === "finance_report"
   ) {
     function_check = true;
   }
   if (function_check === true) {
     return results;
   }
+
+  // If the last time the report was run was more than 6 days, generate a new report for the user and send a message asking to refresh page.
+  let message = null;
+  if (results.length > 0 && body.item_type === "finance_report") {
+    let timeDiff = Date.now() - results[0].creationTime.timestamp;
+    timeDiff = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
+    console.log("Time diff in days", timeDiff);
+    if (timeDiff > 6) {
+      console.log(
+        "Generating a fresh financial report for user",
+        request.email
+      );
+      generateFinanceReport({ email: request.email, query: {} }, null, {
+        internal: true,
+      });
+      message =
+        "Generating a new report, refresh page to review latest report.";
+    }
+  } else if (results.length == 0) {
+    generateFinanceReport({ email: request.email, query: {} }, null, {
+      internal: true,
+    });
+    message = "Generating a new report, refresh page to review latest report.";
+  }
   response
     ? response.json({
         response: results,
+        message: message,
       })
     : {};
 };
 
 exports.get_items = get_items;
+
+const get_items_internal = async function (email, item_type) {
+  const body = {};
+  body.email = email;
+  body.item_type = item_type;
+  const results = await MongoBot.FinanceItems.findItem(body);
+  return results;
+};
+
+exports.get_items_internal = get_items_internal;
 
 // Retrieve real-time Balances for each of an Item's accounts
 // https://plaid.com/docs/#balance
@@ -216,17 +287,19 @@ const update_liabilities = async function (request, response, next) {
       for (const account_token of account_tokens) {
         if (account_token) {
           const poop = async function () {
-            console.log("getting liabilities for user ", request.email);
+            // console.log("getting liabilities for user ", account_token);
             const liabilitiesResponse = await client.liabilitiesGet({
               access_token: account_token,
             });
-            const date = dateUtil.getDate(request.requestTime);
+            const date = dateUtil.getDate(Date.now());
             let balance = 0;
             let last_payment = 0;
             liabilitiesResponse.data.liabilities.credit.forEach((credit) => {
               balance = balance + credit.last_statement_balance;
               last_payment = last_payment + credit.last_payment_amount;
             });
+            last_payment = Math.round(last_payment);
+            balance = Math.round(balance);
             const total_last_payment = last_payment;
             const total_balance = balance;
             let liabilities_body = {
@@ -241,7 +314,7 @@ const update_liabilities = async function (request, response, next) {
                     year: date.split("/")[2],
                     month: date.split("/")[1],
                     day: date.split("/")[0],
-                    timestamp: request.requestTime,
+                    timestamp: Date.now(),
                   },
                   balance: total_balance,
                   last_payment: total_last_payment,
@@ -259,13 +332,18 @@ const update_liabilities = async function (request, response, next) {
         }
       }
     }
-    return liabilities_list;
+    return liabilities_list.slice(-10);
   };
+
   const return_body = await get_all_liabilities();
-  response.json({
-    error: null,
-    liabilities: return_body,
-  });
+  if (next.internal) {
+    return return_body;
+  } else {
+    response.json({
+      error: null,
+      liabilities: return_body,
+    });
+  }
 };
 
 exports.update_liabilities = update_liabilities;
@@ -278,26 +356,17 @@ const persist_items = async function (req, res, type, bodies) {
     args.item_id = body.item_id;
     const current_items = await get_items(req, res, args);
     if (current_items.length > 0 && current_items.length < 2) {
-      console.log(
-        "item record already exists for user ",
-        req.email,
-        ". Updating user finance item now."
-      );
       let liabilities_timeline = current_items[0].records;
-      console.log(
-        "This is the current length of records for this item before update = ",
-        liabilities_timeline.length
-      );
       liabilities_timeline.push(body.records[0]);
       body.current_balance = body.current_balance;
       body.records = liabilities_timeline;
-      body.lastUpdate = dateUtil.getDate(req.requestTime);
+      body.lastUpdate = dateUtil.getDate(Date.now());
       MongoBot.FinanceItems.updateItem(current_items[0]._id, body);
     } else {
       try {
         bodies.forEach(async (body) => {
           console.log("persisting finance data for user ", body.email);
-          body.creationDate = dateUtil.getDate(req.requestTime);
+          body.creationDate = dateUtil.getDate(Date.now());
           const response = await MongoBot.FinanceItems.addItem(body);
           if (response === undefined || response === null) {
             saved = false;
@@ -314,19 +383,30 @@ const persist_items = async function (req, res, type, bodies) {
   return saved;
 };
 
-const createLiabilitiesReport = async function (request, response) {
-  const liabilities_list = await get_items(request, response, {
-    type: "liabilities",
+const generateFinanceReport = async function (request, response, next) {
+  // Update recent liability report
+  const run_liabilities_update = await update_liabilities(request, response, {
+    internal: true,
   });
-  const curr_report = await get_items(request, response, {
-    type: "liabilities_report",
-  });
-  // If a liability report does not exist, initialize a liability report
+  console.log("ran liabilities update for user", request.email);
+
+  // Get updated list of liability
+  const liabilities_list = await get_items_internal(
+    request.email,
+    "liabilities"
+  );
+
+  // Get current finance report
+  const curr_report = await get_items_internal(request.email, "finance_report");
+
   let total_liabilities_balance = 0;
   let total_last_payments = 0;
-  const date = dateUtil.getDate(request.requestTime);
+  let sum_assets = 0;
+  const date = dateUtil.getDate(Date.now());
 
+  // If a liability report does not exist, initialize a liability report
   if (curr_report.length < 1) {
+    // Collect liabilities information
     for (const liability in liabilities_list) {
       console.log(
         "liability.current_balance",
@@ -345,12 +425,20 @@ const createLiabilitiesReport = async function (request, response) {
         year: date.split("/")[2],
         month: date.split("/")[1],
         day: date.split("/")[0],
-        timestamp: request.requestTime,
+        timestamp: Date.now(),
       },
-      item_type: "liabilities_report",
-      lastUpdate: dateUtil.getDate(request.requestTime),
-      liabilities_balance: total_liabilities_balance,
-      last_payment: total_last_payments,
+      item_type: "finance_report",
+      lastUpdate: dateUtil.getDate(Date.now()),
+      liabilities: {
+        liabilities_balance: total_liabilities_balance,
+        prev_liabilities_balance: 0,
+        last_payment: total_last_payments,
+        prev_last_payment: 0,
+      },
+      assets: {
+        total_assets: sum_assets,
+        prev_total_assets: 0,
+      },
       records: [
         {
           creationTime: {
@@ -358,22 +446,25 @@ const createLiabilitiesReport = async function (request, response) {
             year: date.split("/")[2],
             month: date.split("/")[1],
             day: date.split("/")[0],
-            timestamp: request.requestTime,
+            timestamp: Date.now(),
           },
-          liabilities_balance: total_liabilities_balance,
-          last_payment: total_last_payments,
+          liabilities: {
+            liabilities_balance: total_liabilities_balance,
+            last_payment: total_last_payments,
+          },
+          assets: {
+            total_assets: sum_assets,
+          },
+          records: [],
         },
       ],
     };
-    await persist_items(request, response, "liabilities_report", [body]);
+    await persist_items(request, response, "finance_report", [body]);
   } else {
     let total_liabilities_balance = 0;
     let total_last_payments = 0;
+    let sum_assets = 0;
     for (const liability in liabilities_list) {
-      console.log(
-        "liability.current_balance",
-        liabilities_list[liability].current_balance
-      );
       total_liabilities_balance =
         total_liabilities_balance + liabilities_list[liability].current_balance;
       total_last_payments =
@@ -381,8 +472,15 @@ const createLiabilitiesReport = async function (request, response) {
         liabilities_list[liability].records[0].last_payment;
     }
     let report = curr_report[0];
-    report.liabilities_balance = total_liabilities_balance;
-    report.last_payment = total_last_payments;
+    report.liabilities["prev_liabilities_balance"] =
+      report.liabilities["liabilities_balance"];
+    report.liabilities["prev_last_payment"] =
+      report.liabilities["last_payment"];
+    report.liabilities["liabilities_balance"] = total_liabilities_balance;
+    report.liabilities["last_payment"] = total_last_payments;
+    report.assets["prev_total_assets"] = report.assets["total_assets"];
+    report.assets["total_assets"] = sum_assets;
+    report.lastUpdate = dateUtil.getDate(Date.now());
     let latest_records = report.records;
     latest_records.push({
       creationTime: {
@@ -390,19 +488,24 @@ const createLiabilitiesReport = async function (request, response) {
         year: date.split("/")[2],
         month: date.split("/")[1],
         day: date.split("/")[0],
-        timestamp: request.requestTime,
+        timestamp: Date.now(),
       },
-      liabilities_balance: total_liabilities_balance,
-      last_payment: total_last_payments,
+      liabilities: {
+        liabilities_balance: total_liabilities_balance,
+        last_payment: total_last_payments,
+      },
+      assets: {
+        total_assets: sum_assets,
+      },
     });
     report.records = latest_records;
     delete report.lastModified;
     await MongoBot.FinanceItems.updateItem(report._id, report);
   }
-  const res = await get_items(request, response, {
-    type: "liabilities_report",
+  const res = await get_items_internal(request, response, {
+    type: "finance_report",
   });
-  response.send(res).end();
+  return true;
 };
 
-exports.createLiabilitiesReport = createLiabilitiesReport;
+exports.generateFinanceReport = generateFinanceReport;
