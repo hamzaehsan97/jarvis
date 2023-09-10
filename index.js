@@ -89,7 +89,11 @@ app.get(
 );
 app.patch(
   "/texties",
-  [tokenValidator.validate, service_middleware.service_activated("notes")],
+  [
+    tokenValidator.validate,
+    service_middleware.service_activated("notes"),
+    validator.validate(["content"]),
+  ],
   texties.update
 );
 app.delete(
