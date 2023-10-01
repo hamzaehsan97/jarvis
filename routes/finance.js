@@ -217,14 +217,15 @@ const get_items = async function (request, response, args) {
     console.log("Time diff in days", timeDiff);
     if (timeDiff > 6) {
       console.log(
-        "Generating a fresh financial report for user because time difference is more than 6",
+        "Generating a fresh financial report for user because time difference is more than 6.",
         request.email
       );
       generateFinanceReport({ email: request.email, query: {} }, null, {
         internal: true,
       });
       message =
-        "Generating a fresh financial report for user because time difference is more than 6";
+        "Generating a fresh financial report for user because time difference is more than 6. Current timediff is " +
+        timeDiff;
     }
   } else if (results.length == 0) {
     generateFinanceReport({ email: request.email, query: {} }, null, {
