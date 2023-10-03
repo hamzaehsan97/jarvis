@@ -212,21 +212,19 @@ const get_items = async function (request, response, args) {
   // If the last time the report was run was more than 6 days, generate a new report for the user and send a message asking to refresh page.
   let message = null;
   if (results.length > 0 && body.item_type === "finance_report") {
-    console.log("This is the creationTime from DB" + results[0].records[0].creationTime.timestamp);
     let timeDiff = Date.now() - results[0].records[0].creationTime.timestamp;
     timeDiff = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
     console.log("Time diff in days", timeDiff);
     if (timeDiff > 6) {
       console.log(
-        "Generating a fresh financial report for user because time difference is more than 6.",
+        "Generating a fresh financial report for user because time difference is more than 6 days. Timestamp for prev report is "+ results[0].records[0].creationTime.timestamp+". Email of user is ",
         request.email
       );
       generateFinanceReport({ email: request.email, query: {} }, null, {
         internal: true,
       });
       message =
-        "Generating a fresh financial report for user because time difference is more than 6. Current timediff is " +
-        timeDiff;
+        "Generating a fresh financial report for you since the previous report is older than 6 days. Please refresh page to view a fresh report.";
     }
   } else if (results.length == 0) {
     generateFinanceReport({ email: request.email, query: {} }, null, {
