@@ -212,6 +212,7 @@ const get_items = async function (request, response, args) {
   // If the last time the report was run was more than 6 days, generate a new report for the user and send a message asking to refresh page.
   let message = null;
   if (results.length > 0 && body.item_type === "finance_report") {
+    console.log("This is the creationTime from DB" + results[results.length - 1].creationTime);
     let timeDiff = Date.now() - results[results.length - 1].creationTime.timestamp;
     timeDiff = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
     console.log("Time diff in days", timeDiff);
