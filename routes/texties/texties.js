@@ -1,8 +1,8 @@
 "use strict";
 
-const MongoBot = require("../db/mongo");
+const MongoBot = require("../../db/mongo");
 const CryptoJS = require("crypto-js");
-const dateUtil = require("../util/date");
+const dateUtil = require("../../util/date");
 // posts texties based on type
 exports.create = async function (req, res) {
   const content = req.query.content ? req.query.content : "";

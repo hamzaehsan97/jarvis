@@ -2,15 +2,13 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cron = require("node-cron");
 const path = require("path");
-const communicate = require("./routes/communicate");
-const auth = require("./routes/auth");
-const users = require("./routes/users");
-const texties = require("./routes/texties");
-const services = require("./routes/services");
-const passwords = require("./routes/passwords");
-const leads = require("./routes/hotline/leads");
-const employees = require("./routes/hotline/employees");
-const finance = require("./routes/finance");
+const communicate = require("./routes/communicate/communicate");
+const auth = require("./routes/auth/auth");
+const users = require("./routes/users/users");
+const texties = require("./routes/texties/texties");
+const services = require("./routes/services/services");
+const passwords = require("./routes/passwords/passwords");
+const finance = require("./routes/finance/finance");
 const tokenValidator = require("./middleware/auth_middleware");
 const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
@@ -134,41 +132,6 @@ app.delete(
   "/passwords",
   [tokenValidator.validate, service_middleware.service_activated("passwords")],
   passwords.delete
-);
-
-// Hotline routes
-app.post(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.create
-);
-app.get(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.list
-);
-app.delete(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.delete
-);
-app.patch(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.update
-);
-app.get(
-  "/hotline/employees",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  employees.getEmployees
-);
-app.post(
-  "/hotline/employees",
-  [
-    tokenValidator.validate,
-    role_middleware.role_check(["admin", "hotline_employee"]),
-  ],
-  employees.createEmployee
 );
 
 // Finance routes

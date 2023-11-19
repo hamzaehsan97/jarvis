@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const MongoBot = require("../db/mongo");
-const encryption = require("../util/encryption");
+const MongoBot = require("../../db/mongo");
+const encryption = require("../../util/encryption");
 require("dotenv").config();
 
 module.exports = async (req, res) => {

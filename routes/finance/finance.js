@@ -1,8 +1,8 @@
 require("dotenv").config();
-const services = require("./services");
-const MongoBot = require("../db/mongo");
-const Encryption = require("../util/encryption");
-const dateUtil = require("../util/date");
+const services = require("../services/services");
+const MongoBot = require("../../db/mongo");
+const Encryption = require("../../util/encryption");
+const dateUtil = require("../../util/date");
 
 require("dotenv").config();
 
@@ -217,7 +217,9 @@ const get_items = async function (request, response, args) {
     console.log("Time diff in days", timeDiff);
     if (timeDiff > 6) {
       console.log(
-        "Generating a fresh financial report for user because time difference is more than 6 days. Timestamp for prev report is "+ results[0].records[0].creationTime.timestamp+". Email of user is ",
+        "Generating a fresh financial report for user because time difference is more than 6 days. Timestamp for prev report is " +
+          results[0].records[0].creationTime.timestamp +
+          ". Email of user is ",
         request.email
       );
       generateFinanceReport({ email: request.email, query: {} }, null, {

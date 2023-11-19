@@ -1,5 +1,5 @@
 const MongoBot = require("../db/mongo");
-const finance = require("../routes/finance");
+const finance = require("../routes/finance/finance");
 const mailman = require("../util/mailman");
 const constants = require("../constants/comms_constants");
 //Find all users with finance services activate
