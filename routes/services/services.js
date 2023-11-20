@@ -1,10 +1,10 @@
 "use strict";
 
-const MongoBot = require("../db/mongo");
-const mailman = require("../util/mailman");
-const constants = require("../constants/comms_constants");
-const otp_check = require("../util/verify_otp");
-const service_constants = require("../constants/service_constants");
+const MongoBot = require("../../db/mongo");
+const mailman = require("../../util/mailman");
+const constants = require("../../constants/comms_constants");
+const otp_check = require("../../util/verify_otp");
+const service_constants = require("../../constants/service_constants");
 
 // Activate/Deactivate service based on service name and boolean active value
 exports.activate_service = async function (req, res) {
@@ -58,13 +58,15 @@ exports.read_services = async function (req, res) {
 exports.is_activated = async function (email, service) {
   try {
     const user = await MongoBot.Users.getUser(email);
+    console.log("Checking if service is active for user", service, user.email);
     if (user && user.services[service] && user.services[service] === true) {
       return true;
     } else {
       return false;
     }
   } catch (exception) {
-    console.log("Error in checking if service is active", exception);
+    console.log("Service activation check failed for user", service, user.email);
+    console.error("Error in checking if service is active", exception);
     return false;
   }
 };

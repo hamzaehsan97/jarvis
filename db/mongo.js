@@ -15,13 +15,13 @@ class MongoBot {
         ? process.env.DEV_DB_URI
         : process.env.PROD_DB_URI;
 
-    this.client = new MongoClient(url, { useUnifiedTopology: true });
+    this.plaid_client = new MongoClient(url, { useUnifiedTopology: true });
   }
   async init() {
-    await this.client.connect();
+    await this.plaid_client.connect();
     console.log("connected to database");
 
-    this.db = this.client.db("hammy");
+    this.db = this.plaid_client.db("hammy");
 
     this.Notes = new Notes(this.db);
     this.Users = new Users(this.db);

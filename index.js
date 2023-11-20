@@ -2,15 +2,17 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cron = require("node-cron");
 const path = require("path");
-const communicate = require("./routes/communicate");
-const auth = require("./routes/auth");
-const users = require("./routes/users");
-const texties = require("./routes/texties");
-const services = require("./routes/services");
-const passwords = require("./routes/passwords");
-const leads = require("./routes/hotline/leads");
-const employees = require("./routes/hotline/employees");
-const finance = require("./routes/finance");
+const communicate = require("./routes/communicate/communicate");
+const auth = require("./routes/auth/auth");
+const users = require("./routes/users/users");
+const texties = require("./routes/texties/texties");
+const services = require("./routes/services/services");
+const passwords = require("./routes/passwords/passwords");
+const finance = require("./routes/finance/finance");
+const finance_plaid = require("./routes/finance/plaid");
+const finance_accounts = require("./routes/finance/accounts");
+const finance_balance = require("./routes/finance/balance");
+const finance_liabilities_reports = require("./routes/finance/reports/liabilities");
 const tokenValidator = require("./middleware/auth_middleware");
 const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
@@ -136,85 +138,59 @@ app.delete(
   passwords.delete
 );
 
-// Hotline routes
-app.post(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.create
-);
-app.get(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.list
-);
-app.delete(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.delete
-);
-app.patch(
-  "/hotline/leads",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  leads.update
-);
-app.get(
-  "/hotline/employees",
-  [tokenValidator.validate, role_middleware.role_check(["hotline_employee"])],
-  employees.getEmployees
-);
-app.post(
-  "/hotline/employees",
-  [
-    tokenValidator.validate,
-    role_middleware.role_check(["admin", "hotline_employee"]),
-  ],
-  employees.createEmployee
-);
-
 // Finance routes
+//** Plaid routes */
 app.get(
   "/finance/plaid/create_link_token",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.create_link_token
+  finance_plaid.create_link_token
 );
+
 app.post(
   "/finance/plaid/set_access_token",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.set_access_token
+  finance_plaid.set_access_token
 );
+
+//** Balance routes */
 app.get(
   "/finance/balance",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.get_balance
+  finance_balance.get_balance
 );
+
+//** Liabilities routes */
 app.post(
   "/finance/liabilities",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.update_liabilities
+  finance_liabilities_reports.update_liabilities_report
 );
 
 app.patch(
   "/finance/liabilities",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.get_items
+  finance_liabilities_reports.get_liabilities_report
 );
 
+//** Accounts routes */
 app.get(
   "/finance/accounts",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.get_account_tokens
+  finance_accounts.list_finance_accounts
 );
 
+
+//** Finance report routes */
 app.get(
   "/finance/report",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.get_items
+  finance_liabilities_reports.get_liabilities_report
 );
 
 app.get(
   "/finance/generate_report",
   [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance.generateFinanceReport
+  finance_liabilities_reports.generateFinanceReport
 );
 
 // Scheduled tasks below using node-cron

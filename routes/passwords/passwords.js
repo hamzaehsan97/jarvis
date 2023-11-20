@@ -1,9 +1,9 @@
 "use strict";
 
-const MongoBot = require("../db/mongo");
+const MongoBot = require("../../db/mongo");
 const CryptoJS = require("crypto-js");
-const encryption = require("../util/encryption");
-const dateUtil = require("../util/date");
+const encryption = require("../../util/encryption");
+const dateUtil = require("../../util/date");
 // get account secret
 const get_secret = async function (req, res) {
   const user = req.email;
