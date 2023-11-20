@@ -36,7 +36,7 @@ exports.send_mail = async function (receiver, subject, text, html) {
 exports.send_text = async function (phone_number, message) {
   if (validation.phone_number_validate(phone_number)) {
     try {
-      client.messages
+      plaid_client.messages
         .create({
           to: phone_number,
           from: "+15126050927",

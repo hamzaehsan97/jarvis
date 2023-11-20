@@ -58,13 +58,15 @@ exports.read_services = async function (req, res) {
 exports.is_activated = async function (email, service) {
   try {
     const user = await MongoBot.Users.getUser(email);
+    console.log("Checking if service is active for user", service, user.email);
     if (user && user.services[service] && user.services[service] === true) {
       return true;
     } else {
       return false;
     }
   } catch (exception) {
-    console.log("Error in checking if service is active", exception);
+    console.log("Service activation check failed for user", service, user.email);
+    console.error("Error in checking if service is active", exception);
     return false;
   }
 };
