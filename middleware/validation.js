@@ -7,7 +7,6 @@ exports.validate = (fields) => {
     let error = false;
     let missingFields = [];
     fields.forEach((field) => {
-      console.log("this is the req.query" + req.query);
       if (!req.query[field]) {
         error = true;
         missingFields.push(field);

@@ -18,8 +18,10 @@ const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
 const role_middleware = require("./middleware/role_middleware");
+const validate_params = require("./constants/validate");
 const schedular = require("./util/schedular");
 const validator = require("./middleware/validation");
+const params = validate_params.api_params;
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
@@ -48,95 +50,47 @@ app.get("/", (req, res) => {
 });
 
 // User routes
-app.post("/users", users_middleware.createUser, users.create);
-app.get("/users", tokenValidator.validate, users.read);
-app.patch("/users", tokenValidator.validate, users.update);
-app.delete("/users", tokenValidator.validate, users.delete); //delete user funtionality (Should only be available for admins)
-app.post(
-  "/users/verify",
-  validator.validate(["email", "otp"]),
-  users.verify_account
-); //verify user account with email and otp
-app.patch("/users/otp", validator.validate(["email"]), users.create_otp); //create a new otp code for the user
-app.get("/users/otp", validator.validate(["email", "otp"]), users.verify_otp); //verify user otp
-app.patch(
-  "/users/password",
-  validator.validate(["email", "otp", "password"]),
-  users.update_password
-); //update user password, otp required
-app.post(
-  "/users/secret",
-  validator.validate(["secret"]),
-  tokenValidator.validate,
-  users.set_secret
-); //update user secret
+
+//** User CRUD Routes */
+app.route("/users")
+  .post(users_middleware.createUser, users.create) //create a new user
+  .get( tokenValidator.validate, users.read) //read a user
+  .patch(tokenValidator.validate, users.update) //update a user
+  .delete(tokenValidator.validate, users.delete); //delete a user
+
+//** User Custom Routes */
+app.post("/users/verify", validator.validate(params.verify.post), users.verify_account); //verify user account with email and otp
+app.patch("/users/otp", validator.validate(params.otp.patch), users.create_otp); //create a new otp code for the user
+app.get("/users/otp", validator.validate(params.otp.get), users.verify_otp); //verify user otp
+app.patch("/users/password", validator.validate(params.user_password.patch), users.update_password); //update user password, otp required
+app.post("/users/secret", validator.validate(params.secret.post), tokenValidator.validate, users.set_secret); //update user secret
 app.get("/users/logout", users.logout);
 
 // Auth routes
-app.get("/auth", validator.validate(["email", "password"]), auth);
+app.get("/auth", validator.validate(params.auth.get), auth);
 
 // Comms routes
 app.post("/comms", tokenValidator.validate, communicate.send_email);
 
 // Textie routes
-app.post(
-  "/texties",
-  [tokenValidator.validate, service_middleware.service_activated("notes")],
-  texties.create
-);
-app.get(
-  "/texties",
-  [tokenValidator.validate, service_middleware.service_activated("notes")],
-  texties.list
-);
-app.patch(
-  "/texties",
-  [
-    tokenValidator.validate,
-    service_middleware.service_activated("notes"),
-    validator.validate(["content"]),
-  ],
-  texties.update
-);
-app.delete(
-  "/texties",
-  [tokenValidator.validate, service_middleware.service_activated("notes")],
-  texties.delete
-);
+app.route("/texties")
+  .post([tokenValidator.validate, service_middleware.service_activated("notes")], texties.create)
+  .get([tokenValidator.validate, service_middleware.service_activated("notes")], texties.list)
+  .patch([tokenValidator.validate, service_middleware.service_activated("notes"),validator.validate(["content"])], texties.update)
+  .delete([tokenValidator.validate, service_middleware.service_activated("notes")], texties.delete);
 
 // Services routes
-app.post(
-  "/services",
-  [tokenValidator.validate, validator.validate(["service", "active"])],
-  services.activate_service
-);
-app.get("/services", tokenValidator.validate, services.read_services);
+app.route("/services")
+  .post([tokenValidator.validate, validator.validate(params.services.post)], services.activate_service)
+  .get(tokenValidator.validate, services.read_services);
 
 // Passwords routes
-app.post(
-  "/passwords",
-  [tokenValidator.validate, service_middleware.service_activated("passwords")],
-  passwords.create
-);
-app.get(
-  "/passwords",
-  [tokenValidator.validate, service_middleware.service_activated("passwords")],
-  passwords.list
-);
-app.patch(
-  "/passwords",
-  [
-    tokenValidator.validate,
-    service_middleware.service_activated("passwords"),
-    validator.validate(["id", "content"]),
-  ],
-  passwords.update
-);
-app.delete(
-  "/passwords",
-  [tokenValidator.validate, service_middleware.service_activated("passwords")],
-  passwords.delete
-);
+app.route("/passwords")
+  .post([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.create)
+  .get([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.list)
+  .patch([tokenValidator.validate, service_middleware.service_activated("passwords"),validator.validate(params.passwords.patch)], passwords.update)
+  .delete([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.delete);
+
 
 // Finance routes
 //** Plaid routes */
