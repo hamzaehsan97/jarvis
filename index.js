@@ -46,7 +46,7 @@ app.use(cookieParser());
 app.use(time_middleware.requestTime);
 
 app.get("/", (req, res) => {
-  res.send("welcome young'n").end();
+  res.status(200).send("welcome young'n").end();
 });
 
 // User routes
@@ -154,3 +154,5 @@ cron.schedule("00 01 * * 5", function () {
   console.log("running finance schedular");
   schedular.runFinanceReports();
 });
+
+module.exports = app;
