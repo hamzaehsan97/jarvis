@@ -63,7 +63,7 @@ exports.sendVerificationEmail = sendVerificationEmail;
 // get user by email
 const read = async function (req, res) {
   let email = "";
-  req.query.email ? (email = req.query.email) : (email = null);
+  req.email ? (email = req.email) : (email = null);
   const result = await MongoBot.Users.getUser(email);
   if (result === undefined) {
     res.status(404).send({ message: "user not found" }).end();
