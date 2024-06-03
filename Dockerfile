@@ -1,13 +1,15 @@
-FROM node:8-alpine
+FROM --platform=linux/amd64 node:18.12.1
 
-WORKDIR /usr/app
+WORKDIR /usr/src/app
 
-COPY package.json .
+COPY package*.json ./
 
-RUN npm i --quiet
+RUN npm install
 
 COPY . .
 
 RUN npm install pm2 -g
 
-CMD ["pm2-runtime", "index.js"]
+EXPOSE 8080
+
+CMD ["npm", "start"]
