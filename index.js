@@ -24,7 +24,7 @@ const validator = require("./middleware/validation");
 const params = validate_params.api_params;
 const cors = require("cors");
 require("dotenv").config();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const app = express();
 app.use(
   express.urlencoded({
