@@ -21,6 +21,8 @@ const role_middleware = require("./middleware/role_middleware");
 const validate_params = require("./constants/validate");
 const schedular = require("./util/schedular");
 const validator = require("./middleware/validation");
+const ruid = require('express-ruid');
+
 const params = validate_params.api_params;
 const cors = require("cors");
 require("dotenv").config();
@@ -40,11 +42,11 @@ async function start() {
   app.listen(PORT);
 }
 start();
-
+app.set('trust proxy', true)
 app.use(cors());
 app.use(cookieParser());
+app.use(ruid());
 app.use(time_middleware.requestTime);
-
 app.get("/", (req, res) => {
   res.status(200).send("welcome young'n").end();
 });
