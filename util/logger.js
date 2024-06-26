@@ -2,7 +2,7 @@
 const log = function (message, req) {
     var log = createRequestLog(req);
     log.applicationLog = message;
-    console.log(log);
+    console.log(JSON.stringify(log));
   };
 exports.log = log;
 
