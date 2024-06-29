@@ -7,16 +7,13 @@ const auth = require("./routes/auth/auth");
 const users = require("./routes/users/users");
 const texties = require("./routes/texties/texties");
 const services = require("./routes/services/services");
+const campaigns = require("./routes/campaigns/campaigns");
 const passwords = require("./routes/passwords/passwords");
-const finance = require("./routes/finance/finance");
-const finance_plaid = require("./routes/finance/plaid");
-const finance_accounts = require("./routes/finance/accounts");
-const finance_balance = require("./routes/finance/balance");
-const finance_liabilities_reports = require("./routes/finance/reports/liabilities");
 const tokenValidator = require("./middleware/auth_middleware");
 const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
+const aws_creds = require("./routes/aws/credentials");
 const role_middleware = require("./middleware/role_middleware");
 const validate_params = require("./constants/validate");
 const schedular = require("./util/schedular");
@@ -47,6 +44,7 @@ app.use(cors());
 app.use(cookieParser());
 app.use(ruid());
 app.use(time_middleware.requestTime);
+// app.use(aws_creds);
 app.get("/", (req, res) => {
   res.status(200).send("welcome young'n").end();
 });
@@ -69,7 +67,7 @@ app.post("/users/secret", validator.validate(params.secret.post), tokenValidator
 app.get("/users/logout", users.logout);
 
 // Auth routes
-app.get("/auth", validator.validate(params.auth.get), auth);
+app.get("/auth", validator.validate(params.auth.get), auth); // login in customer
 
 // Comms routes
 app.post("/comms", tokenValidator.validate, communicate.send_email);
@@ -90,71 +88,17 @@ app.route("/services")
 app.route("/passwords")
   .post([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.create)
   .get([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.list)
-  .patch([tokenValidator.validate, service_middleware.service_activated("passwords"),validator.validate(params.passwords.patch)], passwords.update)
+  .patch([tokenValidator.validate, service_middleware.service_activated("passwords"), validator.validate(params.passwords.patch)], passwords.update)
   .delete([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.delete);
 
+// customers
+app.route("/campaigns")
+    .get(campaigns.create);
 
-// Finance routes
-//** Plaid routes */
-app.get(
-  "/finance/plaid/create_link_token",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_plaid.create_link_token
-);
-
-app.post(
-  "/finance/plaid/set_access_token",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_plaid.set_access_token
-);
-
-//** Balance routes */
-app.get(
-  "/finance/balance",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_balance.get_balance
-);
-
-//** Liabilities routes */
-app.post(
-  "/finance/liabilities",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.update_liabilities_report
-);
-
-app.patch(
-  "/finance/liabilities",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.get_liabilities_report
-);
-
-//** Accounts routes */
-app.get(
-  "/finance/accounts",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_accounts.list_finance_accounts
-);
-
-
-//** Finance report routes */
-app.get(
-  "/finance/report",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.get_liabilities_report
-);
-
-app.get(
-  "/finance/generate_report",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.generateFinanceReport
-);
-
-// Scheduled tasks below using node-cron
 
 // Run report at 1:00 am UTC Friday => 5:00 pm PST on Thursday
 cron.schedule("00 01 * * 5", function () {
-  console.log("running finance schedular");
-  schedular.runFinanceReports();
+  console.log("running schedular");
 });
 
 module.exports = app;
