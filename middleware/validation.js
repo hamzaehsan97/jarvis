@@ -1,9 +1,10 @@
 "use strict";
+var logger = require('../util/logger');
 
 // Validate request content before passing to
 exports.validate = (fields) => {
   return (req, res, next) => {
-    console.log("Validating request content for user");
+    logger.log("Validating request content for user "+req.email, req);
     let error = false;
     let missingFields = [];
     fields.forEach((field) => {
@@ -13,6 +14,7 @@ exports.validate = (fields) => {
       }
     });
     if (error === true) {
+      logger.log("Request is missing required fields [" + missingFields + "]", req);
       res
         .status(400)
         .send({

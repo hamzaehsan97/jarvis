@@ -93,7 +93,7 @@ app.route("/passwords")
 
 // customers
 app.route("/campaigns")
-    .get(campaigns.create);
+    .put([tokenValidator.validate, validator.validate(params.campaigns.put)], campaigns.create);
 
 
 // Run report at 1:00 am UTC Friday => 5:00 pm PST on Thursday

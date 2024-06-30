@@ -17,7 +17,8 @@
     "nodemailer": "^6.8.0",
     "nodemon": "^2.0.20",
     "plaid": "^12.2.0",
-    "twilio": "^3.84.1"
+    "twilio": "^3.84.1",
+    "uuid": "^10.0.0"
   },
   "engines": {
     "node": "18.12.1"

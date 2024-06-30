@@ -5,6 +5,9 @@ const api_params = {
     "passwords": {
         "patch": ["id", "content"],
     },
+    "campaigns":{
+        "put": ["campaignName", "campaignType", "campaignStartDate", "campaignEndDate", "campaignRegion", "campaignCountry"],
+    },
     "services": {
         "post": ["service", "active"],
     },
