@@ -13,7 +13,6 @@ const tokenValidator = require("./middleware/auth_middleware");
 const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
 const users_middleware = require("./middleware/users_middleware");
-const aws_creds = require("./routes/aws/credentials");
 const role_middleware = require("./middleware/role_middleware");
 const validate_params = require("./constants/validate");
 const schedular = require("./util/schedular");
@@ -91,9 +90,13 @@ app.route("/passwords")
   .patch([tokenValidator.validate, service_middleware.service_activated("passwords"), validator.validate(params.passwords.patch)], passwords.update)
   .delete([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.delete);
 
-// customers
+// campaigns
 app.route("/campaigns")
-    .put([tokenValidator.validate, validator.validate(params.campaigns.put)], campaigns.create);
+    .put([tokenValidator.validate, validator.validate(params.campaigns.put)], campaigns.create)
+    .get([tokenValidator.validate, validator.validate(params.campaigns.get)], campaigns.get)
+    .patch([tokenValidator.validate, validator.validate(params.campaigns.patch)], campaigns.updateMetadate);
+app.route("/campaigns/list")
+    .get([tokenValidator.validate], campaigns.list);
 
 
 // Run report at 1:00 am UTC Friday => 5:00 pm PST on Thursday

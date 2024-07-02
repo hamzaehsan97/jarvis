@@ -7,6 +7,8 @@ const api_params = {
     },
     "campaigns":{
         "put": ["campaignName", "campaignType", "campaignStartDate", "campaignEndDate", "campaignRegion", "campaignCountry"],
+        "get": ["campaignName"],
+        "patch": ["campaignName"],
     },
     "services": {
         "post": ["service", "active"],
