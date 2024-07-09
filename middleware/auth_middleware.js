@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const logger = require("../util/logger");
 
 exports.validate = (req, res, next) => {
   let token = req.get("token");
   if (!token) {
-    console.log("token not in header, checking for token in parameters");
+    logger.log("token not in header, checking for token in parameters",req);
     token = req.query.token;
     if (!token) {
       res.json({

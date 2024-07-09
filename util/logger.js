@@ -6,6 +6,14 @@ const log = function (message, req) {
   };
 exports.log = log;
 
+const logError = function (message, err, req) {
+  var log = createRequestLog(req);
+  log.applicationLog = message;
+  log.error = JSON.stringify(err, null, 2)
+  console.error(JSON.stringify(log));
+};
+exports.logError = logError;
+
 function createRequestLog(req){
     const logObject = {
       "Time": req.requestTime,

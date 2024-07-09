@@ -5,7 +5,10 @@ const path = require("path");
 const communicate = require("./routes/communicate/communicate");
 const auth = require("./routes/auth/auth");
 const users = require("./routes/users/users");
+const agents = require("./routes/agents/agents");
 const texties = require("./routes/texties/texties");
+const flows = require("./routes/connect/flows");
+const instances = require("./routes/connect/instances");
 const services = require("./routes/services/services");
 const campaigns = require("./routes/campaigns/campaigns");
 const passwords = require("./routes/passwords/passwords");
@@ -38,6 +41,8 @@ async function start() {
   app.listen(PORT);
 }
 start();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true)
 app.use(cors());
 app.use(cookieParser());
@@ -94,9 +99,35 @@ app.route("/passwords")
 app.route("/campaigns")
     .put([tokenValidator.validate, validator.validate(params.campaigns.put)], campaigns.create)
     .get([tokenValidator.validate, validator.validate(params.campaigns.get)], campaigns.get)
-    .patch([tokenValidator.validate, validator.validate(params.campaigns.patch)], campaigns.updateMetadate);
+    .patch([tokenValidator.validate, validator.validate(params.campaigns.patch)], campaigns.updateMetadata)
+    .delete([tokenValidator.validate, validator.validate(params.campaigns.delete)], campaigns.delete);
 app.route("/campaigns/list")
     .get([tokenValidator.validate], campaigns.list);
+
+
+// agents
+app.route("/agents")
+    .put([tokenValidator.validate, validator.validate(params.agents.put)], agents.create)
+    .get([tokenValidator.validate, validator.validate(params.agents.get)], agents.get)
+    .patch([tokenValidator.validate,validator.validate(params.agents.patch)],agents.updateMetadata)
+    .delete([tokenValidator.validate,validator.validate(params.agents.delete)],agents.delete);
+    app.route("/agents/list")
+    .get([tokenValidator.validate], agents.list);
+
+// instances
+app.route("/connect/instances")
+    .put([tokenValidator.validate, validator.validate(params.connect.instances.put)], instances.create);
+
+// flows
+app.route("/connect/flows")
+    .put([tokenValidator.validate], flows.create)
+    .get([tokenValidator.validate, validator.validate(params.connect.flows.get)], flows.get)
+    .delete([tokenValidator.validate,  validator.validate(params.connect.flows.get)], flows.delete);
+
+// flows
+app.route("/connect/flows/list")
+    .get([tokenValidator.validate], flows.list);
+
 
 
 // Run report at 1:00 am UTC Friday => 5:00 pm PST on Thursday

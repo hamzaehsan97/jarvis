@@ -26,10 +26,10 @@ exports.create = async function(req, res, next) {
     // Create a folder inside s3 campaigns
     var params = { Bucket: 'campaignsdirectory', Key: campaignID, ACL: 'private', Body:'body does not matter' };
 
-    s3Client.upload(params, function (err, data) {
+    s3Client.upload(params, async function (err, data) {
         if (err) {
             logger.log("S3 folder creation failed for:"+campaignOwner+err, req);
-            next(err);
+           next(err.message);
         } else {
             logger.log("S3 folder creation successful for customer:"+campaignOwner+" campaignID:"+campaignID, req);
 
@@ -62,7 +62,7 @@ exports.create = async function(req, res, next) {
             ddb.putItem(params, function (err, data) {
                 if (err) {
                     logger.log("Campaign creation failed for customer"+campaignOwner+err, req);
-                    next(err);
+                   next(err.message);
                 } else {
                     logger.log("Campaign created successfully for customer:"+campaignOwner+" campaignID:"+campaignID, req);
                     res.send({"campaignID": campaignID});
@@ -76,14 +76,14 @@ exports.create = async function(req, res, next) {
 
 exports.get = async function(req, res, next){
     const campaignOwner = req.email;
-    const campaignName = req.query.campaignName;
+    const campaignID = req.query.campaignID;
     var params = {
         Key:{
             "campaignOwner":{
                 S: campaignOwner
             },
-            "campaignName":{
-                S: campaignName
+            "campaignID":{
+                S: campaignID
             }
         },
         TableName: "Campaigns"
@@ -95,10 +95,10 @@ exports.get = async function(req, res, next){
 
     ddb.getItem(params, function(err, data) {
         if (err){
-            logger.log("Failed to get campaign for customer: "+campaignOwner+" with campaignName: "+campaignName + err, req);
-            next(err);
+            logger.log("Failed to get campaign for customer: "+campaignOwner+" with campaign: "+campaignID + err, req);
+           next(err.message);
         }else{
-            logger.log("Successfully returned campaign for customer: "+campaignOwner+" with campaignName: "+campaignName, req);
+            logger.log("Successfully returned campaign for customer: "+campaignOwner+" with campaign: "+campaignID, req);
             res.send(data);
         }
     });
@@ -107,7 +107,6 @@ exports.get = async function(req, res, next){
 
 exports.list = async function(req, res, next){
     const campaignOwner = req.email;
-    console.log("this is the email", campaignOwner)
     var params = {
         KeyConditionExpression: 'campaignOwner = :co',
         ExpressionAttributeValues: {
@@ -124,7 +123,7 @@ exports.list = async function(req, res, next){
     ddb.query(params, function(err, data) {
         if (err){
             logger.log("Failed to get campaigns for customer: "+campaignOwner + err, req);
-            next(err);
+           next(err.message);
         }else{
             logger.log("Successfully returned campaign for customer: "+campaignOwner, req);
             res.send(data);
@@ -132,9 +131,9 @@ exports.list = async function(req, res, next){
     });
 }
 
-exports.updateMetadate = async function(req, res, next){
+exports.updateMetadata = async function(req, res, next){
     const campaignOwner = req.email;
-    const campaignName = req.query.campaignName;
+    const campaignID = req.query.campaignID;
     let updateAttributeList = req.query.updateAttributeList.split(',');
     let updateAttributeObject = JSON.parse(req.query.updateAttributeObject);
     let validQuery = validateUpdateItems(updateAttributeList, updateAttributeObject);
@@ -145,7 +144,7 @@ exports.updateMetadate = async function(req, res, next){
             TableName: "Campaigns",
             Key: {
               campaignOwner: {S: campaignOwner},
-              campaignName: {S: campaignName},
+              campaignID: {S: campaignID},
     
             },
             UpdateExpression: updateObject.UpdateExpression, // Update expression
@@ -160,9 +159,8 @@ exports.updateMetadate = async function(req, res, next){
         var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
         ddb.updateItem(params, function(err, data) {
             if (err){
-                logger.log("Unable to update item. Error JSON" + err, req);
-                console.error('Unable to update item. Error JSON:', JSON.stringify(err, null, 2));
-                next(err);
+                logger.logError("Unable to update item:"+campaignID, err, req);
+               next(err.message);
             }else{
                 logger.log("Successfully returned campaign for customer: "+campaignOwner, req);
                 res.send(data);
@@ -173,6 +171,36 @@ exports.updateMetadate = async function(req, res, next){
     }
 
 }
+
+exports.delete = function(req, res){
+    const campaignOwner = req.email;
+    const campaignID = req.query.campaignID;
+    AWS.config.update({ region: "us-west-2" });
+
+    var params = {
+        Key:{
+            "campaignOwner":{
+                S: campaignOwner
+            },
+            "campaignID":{
+                S: campaignID
+            }
+        },
+        TableName: "Campaigns"
+    }
+    
+    var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+    ddb.deleteItem(params, function(err, data) {
+        if(err){
+            logger.logError("failed to delete campaign: "+campaignID+" for customer "+campaignOwner,err, req)
+           next(err.message);
+        }else{
+            logger.log("successfully deleted campaign: "+campaignID+" for customer "+campaignOwner, req)
+            res.send(data);
+        }
+    });
+}
+
 
 
 const generateExpressionAttributeNames = function(updateAttributeList, updateAttributeObject){

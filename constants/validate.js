@@ -7,8 +7,25 @@ const api_params = {
     },
     "campaigns":{
         "put": ["campaignName", "campaignType", "campaignStartDate", "campaignEndDate", "campaignRegion", "campaignCountry"],
-        "get": ["campaignName"],
-        "patch": ["campaignName"],
+        "get": ["campaignID"],
+        "patch": ["campaignID"],
+        "delete": ["campaignID"]
+    },
+    "agents":{
+        "put": ["agentFirstName","agentLastName","agentEmail","agentPhoneNumber","agentCountry","agentWorkingHours","agentSpecialty","agentQualifications","agentLanguages"],
+        "get": ["agentID","agentEmail"],
+        "patch": ["agentID", "agentEmail"],
+        "delete": ["agentEmail", "agentID"],
+    },
+    "connect":{
+        "flows":{
+            "put": ["contactFlowName","contactFlowContent","contactFlowType","campaignID"],
+            "get": ["flowID"],
+            "delete": ["flowID"]
+        },
+        "instances":{
+            "put": ["instanceName"]
+        }
     },
     "services": {
         "post": ["service", "active"],
