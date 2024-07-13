@@ -14,104 +14,131 @@ const create = async function (req, res, next) {
   const contactFlowType = req.body.contactFlowType;
   const campaignID = req.body.campaignID;
   const dateCreated = dateUtil.getDate(req.requestTime);
-
-  var params = {
-    InstanceId: constants.connect_instances.defaultInstanceID,
-    Name: contactFlowName,
-    Content: JSON.stringify(contactFlowContent),
-    Type: contactFlowType,
-  };
+  const campaignOwner = req.email;
+  var campaignParams = {
+      Key:{
+          "campaignOwner":{
+              S: campaignOwner
+          },
+          "campaignID":{
+              S: campaignID
+          }
+      },
+      ProjectionExpression: 'connectInstanceID',
+      TableName: "Campaigns"
+  }
 
   AWS.config.update({ region: "us-west-2" });
 
-  var connectClient = new AWS.Connect();
-  await connectClient.createContactFlow(params, (err, data) => {
-    if (err) {
-      logger.logError(
-        "failed to create contactFlow for customer: " + req.email,
-        err,
-        req
-      );
-      next(err);
-    } else {
-      logger.log(
-        "successfully created contactFlow for customer: " +
-          req.email +
-          " with contactFlowID: " +
-          data.ContactFlowId,
-        req
-      );
-      const campaignObject = {
-        flowID: { S: data.ContactFlowId },
-        flowName: { S: contactFlowName },
-        flowType: { S: contactFlowType },
-        flowOwner: { S: req.email },
-        flowArn: { S: data.ContactFlowArn },
-        campaignID: { S: campaignID },
-        dateCreated: { S: dateCreated },
-        dateUpdated: { S: dateCreated },
-      };
+  var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
 
-      var ddbParams = {
-        TableName: flows_table_name,
-        Item: campaignObject,
-      };
-
-      var ddbClient = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
-
-      ddbClient.putItem(ddbParams, function (err, result) {
-        if (err) {
-          logger.logError(
-            "flow creation failed for customer: " + req.email,
-            err,
-            req
-          );
-          next(err.message);
-        } else {
-          logger.log(
-            "flow created successfully for customer: " +
-              req.email +
-              " flowID:" +
-              data.ContactFlowId,
-            req
-          );
-        }
-      });
-      const dynamoDB = new AWS.DynamoDB.DocumentClient();
-      const campaignsUpdateParams = {
-        TableName: "Campaigns",
-        Key: {
-          campaignOwner: req.email,
-          campaignID: campaignID,
-        },
-        UpdateExpression:
-          "SET #af = list_append(if_not_exists(#af, :empty_list), :associatedFlow)",
-        ExpressionAttributeNames: {
-          "#af": "associatedFlows",
-        },
-        ExpressionAttributeValues: {
-          ":associatedFlow": [data.ContactFlowId],
-          ":empty_list": [],
-        },
-        ReturnValues: "UPDATED_NEW", // Return the updated attributes
-      };
-
-      dynamoDB.update(campaignsUpdateParams, function (err, updateResult) {
-        if (err) {
-          logger.logError("Unable to update item:" + campaignID, err, req);
-          next(err.message);
-        } else {
-          logger.log(
-            "Successfully associated flow: " +
-              data.ContactFlowId +
-              " to campaign: " +
-              campaignID,
-            req
-          );
-          res.send({ FlowID: data.ContactFlowId });
-        }
-      });
-    }
+  ddb.getItem(campaignParams, function(err, campaignData) {
+      if (err){
+        logger.logError("Failed to get campaign for customer: "+campaignOwner+" with campaign: "+campaignID, err, req);
+         next(err.message);
+      }else if(Object.keys(campaignData).length < 1){
+        res.status(404).send("unable to find campaign: "+campaignID+" for customer: "+campaignOwner);
+      }else{
+          const connectInstanceID = campaignData.Item.connectInstanceID.S;
+          var params = {
+            InstanceId: connectInstanceID,
+            Name: contactFlowName,
+            Content: JSON.stringify(contactFlowContent),
+            Type: contactFlowType,
+          };
+        
+          AWS.config.update({ region: "us-west-2" });
+        
+          var connectClient = new AWS.Connect();
+          connectClient.createContactFlow(params, (err, data) => {
+            if (err) {
+              logger.logError(
+                "failed to create contactFlow for customer: " + req.email,
+                err,
+                req
+              );
+              next(err);
+            } else {
+              logger.log(
+                "successfully created contactFlow for customer: " +
+                  req.email +
+                  " with contactFlowID: " +
+                  data.ContactFlowId,
+                req
+              );
+              const flowObject = {
+                flowID: { S: data.ContactFlowId },
+                flowName: { S: contactFlowName },
+                flowType: { S: contactFlowType },
+                flowOwner: { S: req.email },
+                flowArn: { S: data.ContactFlowArn },
+                campaignID: { S: campaignID },
+                dateCreated: { S: dateCreated },
+                dateUpdated: { S: dateCreated },
+              };
+        
+              var ddbParams = {
+                TableName: flows_table_name,
+                Item: flowObject,
+              };
+        
+              var ddbClient = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+        
+              ddbClient.putItem(ddbParams, function (err, result) {
+                if (err) {
+                  logger.logError(
+                    "flow creation failed for customer: " + req.email,
+                    err,
+                    req
+                  );
+                  next(err.message);
+                } else {
+                  logger.log(
+                    "flow created successfully for customer: " +
+                      req.email +
+                      " flowID:" +
+                      data.ContactFlowId,
+                    req
+                  );
+                }
+              });
+              const dynamoDB = new AWS.DynamoDB.DocumentClient();
+              const campaignsUpdateParams = {
+                TableName: "Campaigns",
+                Key: {
+                  campaignOwner: req.email,
+                  campaignID: campaignID,
+                },
+                UpdateExpression:
+                  "SET #af = list_append(if_not_exists(#af, :empty_list), :associatedFlow)",
+                ExpressionAttributeNames: {
+                  "#af": "associatedFlows",
+                },
+                ExpressionAttributeValues: {
+                  ":associatedFlow": [{"flowName": contactFlowName, "flowID": data.ContactFlowId}],
+                  ":empty_list": [],
+                },
+                ReturnValues: "UPDATED_NEW", // Return the updated attributes
+              };
+        
+              dynamoDB.update(campaignsUpdateParams, function (err, updateResult) {
+                if (err) {
+                  logger.logError("Unable to update item:" + campaignID, err, req);
+                  next(err.message);
+                } else {
+                  logger.log(
+                    "Successfully associated flow: " +
+                      data.ContactFlowId +
+                      " to campaign: " +
+                      campaignID,
+                    req
+                  );
+                  res.send({ FlowID: data.ContactFlowId });
+                }
+              });
+            }
+          });
+      }
   });
 };
 exports.create = create;
