@@ -5,6 +5,7 @@ const dateUtil = require("../../util/date");
 const logger = require("../../util/logger");
 var AWS = require("aws-sdk");
 var s3Client = new AWS.S3();
+const instances_table_name = "Instances";
 
 
 exports.create = async function(req, res, next) {
@@ -23,55 +24,127 @@ exports.create = async function(req, res, next) {
 
     AWS.config.update({ region: "us-west-2" });
 
-    // Create a folder inside s3 campaigns
-    var params = { Bucket: 'campaignsdirectory', Key: campaignID, ACL: 'private', Body:'body does not matter' };
-
-    s3Client.upload(params, async function (err, data) {
-        if (err) {
-            logger.log("S3 folder creation failed for:"+campaignOwner+err, req);
-           next(err.message);
-        } else {
-            logger.log("S3 folder creation successful for customer:"+campaignOwner+" campaignID:"+campaignID, req);
-
-            const campaignObject = {
-                campaignID: {S: campaignID},
-                campaignName: {S: campaignName},
-                campaignType: {S: campaignType},
-                dateCreated: {S: dateCreated},
-                dateUpdated: {S: dateCreated},
-                campaignBucketLocation: {S: data.Location},
-                campaignRegion: {S: campaignRegion},
-                campaignStatus: {S: campaignStatus},
-                campaignStartDate: {S: campaignStartDate},
-                campaignEndDate: {S: campaignEndDate},
-                campaignOwner: {S: campaignOwner},
-                campaignCountry: {S: campaignCountry},
-                campaignZipCode: {S: campaignZipCode},
-                campaignZipCode: {S: campaignZipCode}
+    //Check if a connect instance exists. If it doesnt exist then create one and ask customer to retry campaign creation.
+    var params = {
+        Key:{
+            "instanceOwner":{
+                S: campaignOwner
             }
+        },
+        TableName: instances_table_name
+    }
 
-            // Create the DynamoDB service object
-            var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+    var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
 
-            var params = {
-                TableName: campaigns_table_name,
-                Item: campaignObject,
-                ConditionExpression: "attribute_not_exists(campaignName)"
-              };
-        
-            ddb.putItem(params, function (err, data) {
-                if (err) {
-                    logger.log("Campaign creation failed for customer"+campaignOwner+err, req);
-                   next(err.message);
-                } else {
-                    logger.log("Campaign created successfully for customer:"+campaignOwner+" campaignID:"+campaignID, req);
-                    res.send({"campaignID": campaignID});
+    ddb.getItem(params, function(err, data) {
+        if (err){
+            logger.logError("Failed to find connect instance for customer: "+campaignOwner, err, req);
+           next(err.message);
+        }else{
+            if(Object.keys(data).length > 0){
+                logger.log("Found connect instance for customer: "+campaignOwner+" with connectInstance: "+data, req);
+                const instanceID = data.Item.instanceID;
+
+                //    Create a folder for campaigns inside s3 campaigns
+                var params = { Bucket: 'campaignsdirectory', Key: campaignID, ACL: 'private', Body:'body does not matter' };
+                s3Client.upload(params, async function (err, data) {
+                    if (err) {
+                        logger.log("S3 folder creation failed for:"+campaignOwner+err, req);
+                    next(err.message);
+                    } else {
+                        logger.log("S3 folder creation successful for customer:"+campaignOwner+" campaignID:"+campaignID, req);
+                        const campaignObject = {
+                            campaignID: {S: campaignID},
+                            campaignName: {S: campaignName},
+                            campaignType: {S: campaignType},
+                            dateCreated: {S: dateCreated},
+                            dateUpdated: {S: dateCreated},
+                            campaignBucketLocation: {S: data.Location},
+                            campaignRegion: {S: campaignRegion},
+                            campaignStatus: {S: campaignStatus},
+                            campaignStartDate: {S: campaignStartDate},
+                            campaignEndDate: {S: campaignEndDate},
+                            campaignOwner: {S: campaignOwner},
+                            campaignCountry: {S: campaignCountry},
+                            campaignZipCode: {S: campaignZipCode},
+                            campaignZipCode: {S: campaignZipCode},
+                            connectInstanceID: instanceID
+                        }
+
+                        // Create the DynamoDB service object
+                        var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+
+                        var params = {
+                            TableName: campaigns_table_name,
+                            Item: campaignObject,
+                            ConditionExpression: "attribute_not_exists(campaignName)"
+                        };
+                    
+                        ddb.putItem(params, function (err, data) {
+                            if (err) {
+                                logger.log("Campaign creation failed for customer"+campaignOwner+err, req);
+                            next(err.message);
+                            } else {
+                                logger.log("Campaign created successfully for customer:"+campaignOwner+" campaignID:"+campaignID, req);
+                                res.send({"campaignID": campaignID});
+                            }
+                        });
+
+                    }
+                });
+            }else{
+                //create an instance for the customer
+                const connect = new AWS.Connect();
+                const reqEmailList = req.email.split('@');
+                const instanceOwner = req.email;
+                const instanceName =  reqEmailList[0]+"123";
+                if(instanceOwner === "hamzaehsan75@gmail.com"){
+                    // Define the parameters
+                    const params = {
+                        IdentityManagementType: 'CONNECT_MANAGED', // Options: 'SAML', 'CONNECT_MANAGED', 'EXISTING_DIRECTORY'
+                        InstanceAlias: instanceName, // Optional alias for the instance
+                        InboundCallsEnabled: true, // Whether inbound calls are enabled
+                        OutboundCallsEnabled: true // Whether outbound calls are enabled
+                    };
+            
+                    // Create the Connect instance
+                    connect.createInstance(params, (err, instanceData) => {
+                        console.log(instanceData);
+                        if (err) {
+                            logger.logError('Error creating connect instance for customer:'+req.email, err, req);
+                            next(err);
+                        } else {
+                            logger.log('Connect instance created successfully for customer:'+req.email, req);
+                            
+                            const instanceObject = {
+                                instanceID: {S: instanceData.Id},
+                                instanceOwner: {S: req.email},
+                                instanceName: {S: instanceName},
+                                dateCreated: {S: dateCreated},
+                                instanceRegion: {S: campaignRegion},
+                            }
+                            var instanceMetadataParams = {
+                                TableName: instances_table_name,
+                                Item: instanceObject
+                            };
+                            var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+                            ddb.putItem(instanceMetadataParams, function (err, instanceDDBData) {
+                                if (err) {
+                                    logger.logError("instance record creation failed for customer"+campaignOwner, err, req);
+                                    next(err.message);
+                                } else {
+                                    logger.log("instance record creation successful for customer:"+campaignOwner, req);
+                                    res.send("Campaign creation failed. Creating instance for customer. Please try again.");
+                                }
+                            });
+                        }
+                    });
+                }else{
+                    req.status(401).send("You are not allowed to create an instance.")
                 }
-            });
-
+            }
         }
     });
-
 }
 
 exports.get = async function(req, res, next){
