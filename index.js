@@ -6,6 +6,7 @@ const communicate = require("./routes/communicate/communicate");
 const auth = require("./routes/auth/auth");
 const users = require("./routes/users/users");
 const agents = require("./routes/agents/agents");
+const connectUsers = require("./routes/connect/users")
 const texties = require("./routes/texties/texties");
 const flows = require("./routes/connect/flows");
 const instances = require("./routes/connect/instances");
@@ -62,6 +63,9 @@ app.route("/users")
   .patch(tokenValidator.validate, users.update) //update a user
   .delete(tokenValidator.validate, users.delete); //delete a user
 
+app.route("/users-ddb")
+  .post(users.createDDB);
+
 //** User Custom Routes */
 app.post("/users/verify", validator.validate(params.verify.post), users.verify_account); //verify user account with email and otp
 app.patch("/users/otp", validator.validate(params.otp.patch), users.create_otp); //create a new otp code for the user
@@ -111,8 +115,16 @@ app.route("/agents")
     .get([tokenValidator.validate, validator.validate(params.agents.get)], agents.get)
     .patch([tokenValidator.validate,validator.validate(params.agents.patch)],agents.updateMetadata)
     .delete([tokenValidator.validate,validator.validate(params.agents.delete)],agents.delete);
-    app.route("/agents/list")
+
+app.route("/agents/list")
     .get([tokenValidator.validate], agents.list);
+
+app.route("/agents/association")
+    .put([tokenValidator.validate], connectUsers.addUserToInstance)
+    .get([tokenValidator.validate], connectUsers.getUsersInInstance)
+    .delete([tokenValidator.validate], connectUsers.deleteUserFromInstance);
+
+
 
 // instances
 app.route("/connect/instances")
