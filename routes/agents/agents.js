@@ -42,25 +42,25 @@ exports.create = async function (req, res, next) {
       logger.log("S3 folder creation successful for agent:" + agentEmail, req);
 
       const agentObject = {
-        agentID: { S: agentID },
-        agentFirstName: { S: agentFirstName },
-        agentLastName: { S: agentLastName },
-        dateCreated: { S: dateCreated },
-        agentEmail: { S: agentEmail },
-        agentBucketLocation: { S: data.Location },
-        agentPhoneNumber: { S: agentPhoneNumber },
-        agentCountry: { S: agentCountry },
-        agentWorkingHours: { S: agentWorkingHours },
-        agentSpecialty: { S: agentSpecialty },
-        agentQualifications: { S: agentQualifications },
-        agentAboutMe: { S: agentAboutMe },
-        agentAssignedFlows: { S: agentAssignedFlows },
-        agentLanguages: { S: agentLanguages },
-        agentAssignedCampaigns: { S: agentAssignedCampaigns },
+        agentID: agentID,
+        agentFirstName:  agentFirstName,
+        agentLastName: agentLastName,
+        dateCreated: dateCreated,
+        agentEmail: agentEmail,
+        agentBucketLocation: data.Location,
+        agentPhoneNumber: agentPhoneNumber,
+        agentCountry: agentCountry,
+        agentWorkingHours: agentWorkingHours,
+        agentSpecialty: agentSpecialty,
+        agentQualifications: agentQualifications,
+        agentAboutMe: agentAboutMe,
+        agentLanguages: agentLanguages,
+        agentAssignedCampaigns:  agentAssignedCampaigns,
+        available: true,
       };
 
       // Create the DynamoDB service object
-      var ddb = new AWS.DynamoDB({ apiVersion: "2012-08-10" });
+      const ddb = new AWS.DynamoDB.DocumentClient();
 
       var params = {
         TableName: agents_table_name,
@@ -68,7 +68,7 @@ exports.create = async function (req, res, next) {
         ConditionExpression: "attribute_not_exists(agentEmail)",
       };
 
-      ddb.putItem(params, function (err, data) {
+      ddb.put(params, function (err, data) {
         if (err) {
           logger.logError(
             "agent creation failed for agent" + agentEmail,
@@ -254,3 +254,7 @@ exports.delete = function (req, res, next) {
     }
   });
 };
+
+exports.agentAvailable = function(req,res,next){
+  
+}
