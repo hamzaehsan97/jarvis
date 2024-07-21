@@ -6,9 +6,14 @@ const constants = require("../../constants/comms_constants");
 const otp_check = require("../../util/verify_otp");
 const encryption = require("../../util/encryption");
 const validation = require("../../util/validation");
+const logger = require("../../util/logger");
+const users_table_name = "Accounts";
+const emailUtil = require("../../util/email");
+var AWS = require("aws-sdk");
+
 require("dotenv").config();
 
-// create user
+// create user (add user to both DDB and MongoDB)
 exports.create = async function (req, res) {
   try {
     validation.phone_number_validate(req.query.phone_number);
@@ -44,21 +49,51 @@ exports.create = async function (req, res) {
   }
 };
 
-const sendVerificationEmail = async (email) => {
-  const otp = Math.floor(1000 + Math.random() * 9000);
-  const add_otp = await otp_check.update_OTP(otp, email);
-  if (add_otp == false) {
-    return { status: 403 };
-  } else {
-    const mail = await mailman.send_mail(
-      email,
-      constants.verify_email.subject,
-      constants.account_retrieval.text + otp
-    );
-    return mail;
-  }
+// create user (add user to both DDB and MongoDB)
+exports.createDDB = async function (req, res, next) {
+      if(!validation.phone_number_validate(req.body.phoneNumber)){
+        const phone_number_validation_error = new Error("Phone number validation failed");
+        logger.logError("Phone number validation failed for email: "+req.body.email, phone_number_validation_error, req);
+        next(phone_number_validation_error.message);
+      }
+      const otp_code = Math.floor(1000 + Math.random() * 9000);
+      // Create the DynamoDB service object
+      AWS.config.update({ region: "us-west-2" });
+
+      const ddb = new AWS.DynamoDB.DocumentClient();
+
+      var userObject = {
+        accountEmail: req.body.email,
+        password: await encryption.encrypt(
+          process.env.AUTH_SECRET,
+          req.body.password
+        ),
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        phoneNumber: req.body.phoneNumber,
+        emailVerified: false,
+        phoneNumberVerified: false,
+        paymentMethodVerified: false,
+        otp: otp_code
+      }
+
+      var params = {
+        TableName: users_table_name,
+        Item: userObject,
+        ConditionExpression: 'attribute_not_exists(accountEmail) AND attribute_not_exists(phoneNumber)'
+      };
+
+      ddb.put(params, async function (err, data) {
+        if(err){
+          logger.logError("Error in creating user for email: "+req.body.email, err, req);
+          next(err);
+        }else{
+          logger.log("Successfully created DDB user entry for email: "+req.body.email, req);
+          await emailUtil.sendEmail(req.body.email, constants.verify_email.text+otp_code, constants.verify_email.subject)
+          res.send("Account verification email sent");            
+        }
+    });
 };
-exports.sendVerificationEmail = sendVerificationEmail;
 
 // get user by email
 const read = async function (req, res) {
