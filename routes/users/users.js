@@ -14,7 +14,7 @@ var AWS = require("aws-sdk");
 require("dotenv").config();
 
 // create user (add user to both DDB and MongoDB)
-exports.create = async function (req, res) {
+exports.deprecatedCreateInMongoDB = async function (req, res) {
   try {
     validation.phone_number_validate(req.query.phone_number);
     const user = {
@@ -50,7 +50,7 @@ exports.create = async function (req, res) {
 };
 
 // create user (add user to both DDB and MongoDB)
-exports.createDDB = async function (req, res, next) {
+exports.create = async function (req, res, next) {
       if(!validation.phone_number_validate(req.body.phoneNumber)){
         const phone_number_validation_error = new Error("Phone number validation failed");
         logger.logError("Phone number validation failed for email: "+req.body.email, phone_number_validation_error, req);

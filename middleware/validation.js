@@ -8,7 +8,7 @@ exports.validate = (fields) => {
     let error = false;
     let missingFields = [];
     fields.forEach((field) => {
-      if (!req.query[field] || !req.body[field]) {
+      if (!req.query[field] && !req.body[field]) {
         error = true;
         missingFields.push(field);
       }

@@ -63,9 +63,6 @@ app.route("/users")
   .patch(tokenValidator.validate, users.update) //update a user
   .delete(tokenValidator.validate, users.delete); //delete a user
 
-app.route("/users-ddb")
-  .post(users.createDDB);
-
 //** User Custom Routes */
 app.post("/users/verify", validator.validate(params.verify.post), users.verify_account); //verify user account with email and otp
 app.patch("/users/otp", validator.validate(params.otp.patch), users.create_otp); //create a new otp code for the user
