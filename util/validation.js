@@ -1,7 +1,6 @@
 exports.phone_number_validate = function (phone_number) {
-  const regex = /^\+[1-9]\d{1,14}$/;
-  const phoneNumberValid = phone_number.match(regex);
-  return phoneNumberValid;
+  const regex = new RegExp("^[+]{1}(?:[0-9\-\\(\\)\\/.]\s?){6,15}[0-9]{1}$");
+  return regex.test(phone_number);
 };
 
 exports.capitalize = function (words) {

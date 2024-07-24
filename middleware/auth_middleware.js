@@ -18,9 +18,9 @@ exports.validate = (req, res, next) => {
     const user = jwt.verify(token, process.env.AUTH_SECRET);
     req.user = user;
     req.email = user.email;
+    req.instanceID = user.instanceID;
     next();
   } catch (err) {
-    // console.log(err);
     res.clearCookie("token");
     res.json({
       error: "accessDeniedException",

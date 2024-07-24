@@ -36,6 +36,9 @@ const api_params = {
     "verify":{
         "post": ["email", "otp"],
     },
+    "users":{
+        "get": ["email"]
+    },
     "otp": {
         "get": ["email", "otp"],
         "patch":  ["email"],

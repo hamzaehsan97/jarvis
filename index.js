@@ -58,8 +58,8 @@ app.get("/", (req, res) => {
 
 //** User CRUD Routes */
 app.route("/users")
-  .post(users_middleware.createUser, users.create) //create a new user
-  .get( tokenValidator.validate, users.read) //read a user
+  .post(users.create) //create a new user
+  .get([tokenValidator.validate, validator.validate(params.verify.post)], users.read) //read a user
   .patch(tokenValidator.validate, users.update) //update a user
   .delete(tokenValidator.validate, users.delete); //delete a user
 

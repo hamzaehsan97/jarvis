@@ -23,6 +23,7 @@ exports.validate = (fields) => {
         })
         .end();
     } else {
+      logger.log("successfully verified request for customer:"+req.email, req);
       next();
     }
   };

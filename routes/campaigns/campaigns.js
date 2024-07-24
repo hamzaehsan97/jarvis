@@ -97,7 +97,7 @@ exports.create = async function(req, res, next) {
                 const connect = new AWS.Connect();
                 const reqEmailList = req.email.split('@');
                 const instanceOwner = req.email;
-                const instanceName =  reqEmailList[0]+"123";
+                const instanceName =  reqEmailList[0];
                 if(instanceOwner === "hamzaehsan75@gmail.com"){
                     // Define the parameters
                     const params = {
