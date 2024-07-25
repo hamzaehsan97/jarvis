@@ -17,7 +17,7 @@ exports.validate = (req, res, next) => {
   try {
     const user = jwt.verify(token, process.env.AUTH_SECRET);
     req.user = user;
-    req.email = user.email;
+    req.email = user.accountEmail;
     req.instanceID = user.instanceID;
     next();
   } catch (err) {
