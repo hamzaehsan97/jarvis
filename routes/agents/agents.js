@@ -212,7 +212,7 @@ exports.updateMetadata = async function (req, res, next) {
       res.status(404).send("validation exception");
     }
   } catch (err) {
-    next(err);
+    next(err.message);
   }
 };
 

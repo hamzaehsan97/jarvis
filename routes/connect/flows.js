@@ -35,7 +35,7 @@ const create = async function (req, res, next) {
         err,
         req
       );
-      next(err);
+      next(err.message);
     } else {
       logger.log(
         "successfully created contactFlow for customer: " +
@@ -205,7 +205,7 @@ exports.delete = function (req, res, next) {
   connect.deleteContactFlow(deleteParams, (err, data) => {
     if (err) {
       logger.logError("Error deleting contact flow:" + flowID, err, req);
-      next(err);
+      next(err.message);
     } else {
       logger.log("successfully deleted flow with flowID:" + flowID, req);
       var params = {
@@ -264,7 +264,7 @@ exports.delete = function (req, res, next) {
           dynamoDB.update(updateParams, (err, removeAssociationData) => {
             if (err) {
               logger.logError("failed to delete flow association for campaigns for flowID: " + flowID +" in campaign: " +data.Item.campaignID,err,req);
-              next(err);
+              next(err.message);
             } else {
                 logger.log("successfully deleted flow association for campaigns for flowID: " + flowID +" in campaign: " + data.Item.campaignID, req);
                 var ddbDeleteParams = {

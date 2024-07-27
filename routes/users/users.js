@@ -51,7 +51,7 @@ exports.create = async function (req, res, next) {
         ddb.put(params, async function (err, data) {
           if(err){
             logger.logError("Error in creating user for email: "+req.body.email, err, req);
-            next(err);
+            next(err.message);
           }else{
             logger.log("Successfully created DDB user entry for email: "+req.body.email, req);
             await emailUtil.sendEmail(req.body.email, constants.verify_email.text+otp_code, constants.verify_email.subject)
@@ -210,7 +210,7 @@ exports.verify_account = async function (req, res, next) {
         connect.createInstance(instance_params, (err, instanceData) => {
           if (err) {
             logger.logError('Error creating instance for user during account verification email: '+email, err, req);
-            next(err);
+            next(err.message);
           } else {
             logger.log('Instance created successfully during account verification for email: '+email, data);
             const verification_params = {
