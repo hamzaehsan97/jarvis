@@ -22,7 +22,7 @@ const create = async function(req, res, next){
         connect.createInstance(params, (err, data) => {
             if (err) {
             console.error('Error creating instance:', err);
-            next(err);
+            next(err.message);
             } else {
             console.log('Instance created successfully:', data);
             res.send(data);
