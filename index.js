@@ -9,6 +9,8 @@ const agents = require("./routes/agents/agents");
 const connectUsers = require("./routes/connect/users")
 const texties = require("./routes/texties/texties");
 const flows = require("./routes/connect/flows");
+const queues = require("./routes/connect/queues");
+const routingProfiles = require("./routes/connect/routingProfiles");
 const instances = require("./routes/connect/instances");
 const services = require("./routes/services/services");
 const campaigns = require("./routes/campaigns/campaigns");
@@ -136,6 +138,14 @@ app.route("/connect/flows")
 // flows
 app.route("/connect/flows/list")
     .get([tokenValidator.validate], flows.list);
+
+// queues
+app.route("/connect/queues")
+    .delete([tokenValidator.validate], queues.delete);
+
+// routingProfiles
+app.route("/connect/routing-profiles")
+    .delete([tokenValidator.validate], routingProfiles.delete);
 
 
 
