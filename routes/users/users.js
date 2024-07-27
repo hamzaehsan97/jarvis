@@ -54,7 +54,7 @@ exports.create = async function (req, res, next) {
             next(err.message);
           }else{
             logger.log("Successfully created DDB user entry for email: "+req.body.email, req);
-            await emailUtil.sendEmail(req.body.email, constants.verify_email.text+otp_code, constants.verify_email.subject)
+            await emailUtil.sendEmail(req.body.email, constants.verify_email.text+otp_code, constants.verify_email.subject,req)
             res.send("Account verification email sent");            
           }
       });

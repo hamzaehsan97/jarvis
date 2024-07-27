@@ -9,146 +9,160 @@ const instances_table_name = "Instances";
 
 
 exports.create = async function(req, res, next) {
-    const campaigns_table_name = "Campaigns"
-    const campaignID = uuid.v4();
-    const campaignOwner = req.email;
-    const campaignName = req.query.campaignName;
-    const campaignType =  req.query.campaignType;
-    const dateCreated = dateUtil.getDate(req.requestTime);
-    const campaignStartDate = String(req.query.campaignStartDate);
-    const campaignEndDate = String(req.query.campaignEndDate);
-    const campaignStatus = req.query.campaignStatus;
-    const campaignRegion = req.query.campaignRegion;
-    const campaignCountry = req.query.campaignCountry;
-    const campaignZipCode = req.query.ZipCode ?  req.query.ZipCode : "NA";
-
-    AWS.config.update({ region: "us-west-2" });
-
-    const instanceID = req.instanceID;
-    //    Create a folder for campaigns inside s3 campaigns
-    var params = { Bucket: 'campaignsdirectory', Key: campaignID, ACL: 'private', Body:'body does not matter' };
-    s3Client.upload(params, async function (err, data) {
-        if (err) {
-            logger.log("S3 folder creation failed for:"+campaignOwner+err, req);
-        next(err.message);
-        } else {
-            logger.log("S3 folder creation successful for customer:"+campaignOwner+" campaignID:"+campaignID, req);
-
-            // Create the DynamoDB service object
-            const ddb = new AWS.DynamoDB.DocumentClient();
-            const connect = new AWS.Connect();
-
-            const hrs_of_operation_params = {
-                InstanceId: req.instanceID, 
-                Name: campaignID, 
-                TimeZone: 'America/Los_Angeles', 
-                Config: [
-                    {
-                        Day: 'MONDAY',
-                        StartTime: { Hours: 9, Minutes: 0 },
-                        EndTime: { Hours: 17, Minutes: 0 }
-                    },
-                    {
-                        Day: 'TUESDAY',
-                        StartTime: { Hours: 9, Minutes: 0 },
-                        EndTime: { Hours: 17, Minutes: 0 }
-                    },
-                    {
-                        Day: 'WEDNESDAY',
-                        StartTime: { Hours: 9, Minutes: 0 },
-                        EndTime: { Hours: 17, Minutes: 0 }
-                    },
-                    {
-                        Day: 'THURSDAY',
-                        StartTime: { Hours: 9, Minutes: 0 },
-                        EndTime: { Hours: 17, Minutes: 0 }
-                    },
-                    {
-                        Day: 'FRIDAY',
-                        StartTime: { Hours: 9, Minutes: 0 },
-                        EndTime: { Hours: 17, Minutes: 0 }
+    try{
+        const campaigns_table_name = "Campaigns"
+        const campaignID = uuid.v4();
+        const campaignOwner = req.email;
+        const campaignName = req.query.campaignName;
+        const campaignType =  req.query.campaignType;
+        const dateCreated = dateUtil.getDate(req.requestTime);
+        const campaignStartDate = String(req.query.campaignStartDate);
+        const campaignEndDate = String(req.query.campaignEndDate);
+        const campaignStatus = req.query.campaignStatus;
+        const campaignRegion = req.query.campaignRegion;
+        const campaignCountry = req.query.campaignCountry;
+        const campaignZipCode = req.query.ZipCode ?  req.query.ZipCode : "NA";
+    
+        AWS.config.update({ region: "us-west-2" });
+    
+        const instanceID = req.instanceID;
+        //    Create a folder for campaigns inside s3 campaigns
+        var params = { Bucket: 'campaignsdirectory', Key: campaignID, ACL: 'private', Body:'body does not matter' };
+        s3Client.upload(params, async function (err, data) {
+            if (err) {
+                logger.log("S3 folder creation failed for:"+campaignOwner+err, req);
+            next(err.message);
+            } else {
+                logger.log("S3 folder creation successful for customer:"+campaignOwner+" campaignID:"+campaignID, req);
+    
+                // Create the DynamoDB service object
+                const ddb = new AWS.DynamoDB.DocumentClient();
+                const connect = new AWS.Connect();
+    
+                const hrs_of_operation_params = {
+                    InstanceId: req.instanceID, 
+                    Name: campaignID, 
+                    TimeZone: 'America/Los_Angeles', 
+                    Config: [
+                        {
+                            Day: 'MONDAY',
+                            StartTime: { Hours: 9, Minutes: 0 },
+                            EndTime: { Hours: 17, Minutes: 0 }
+                        },
+                        {
+                            Day: 'TUESDAY',
+                            StartTime: { Hours: 9, Minutes: 0 },
+                            EndTime: { Hours: 17, Minutes: 0 }
+                        },
+                        {
+                            Day: 'WEDNESDAY',
+                            StartTime: { Hours: 9, Minutes: 0 },
+                            EndTime: { Hours: 17, Minutes: 0 }
+                        },
+                        {
+                            Day: 'THURSDAY',
+                            StartTime: { Hours: 9, Minutes: 0 },
+                            EndTime: { Hours: 17, Minutes: 0 }
+                        },
+                        {
+                            Day: 'FRIDAY',
+                            StartTime: { Hours: 9, Minutes: 0 },
+                            EndTime: { Hours: 17, Minutes: 0 }
+                        }
+                        // Add additional days as needed
+                    ],
+                    Description: 'Regular business hours',
+                    Tags: {
+                        'campaign': campaignID,
+                        'owner': req.email
                     }
-                    // Add additional days as needed
-                ],
-                Description: 'Regular business hours',
-                Tags: {
-                    'campaign': campaignID,
-                    'owner': req.email
-                }
-            };
-
-            const camapaignHrsOfOperation = await connect.createHoursOfOperation(hrs_of_operation_params).promise();
-
-            const queue_params = {
-                InstanceId: req.instanceID, 
-                Name: campaignID,
-                Description: 'This is a campaign queue for campaignID: '+campaignID, 
-                HoursOfOperationId: camapaignHrsOfOperation.HoursOfOperationId,
-                Tags: {
-                    'campaign': campaignID,
-                    'owner': req.email
-                }
-            };
-
-            const campaignQueue = await connect.createQueue(queue_params).promise();
-
-            const routingProfileParams = {
-                InstanceId: req.instanceID,
-                Name: campaignID, 
-                Description: 'Routing profile for campaign: '+campaignID,
-                DefaultOutboundQueueId: campaignQueue.QueueId,
-                MediaConcurrencies: [
-                    {
-                        Channel: 'VOICE',
-                        Concurrency: 1
+                };
+    
+                const camapaignHrsOfOperation = await connect.createHoursOfOperation(hrs_of_operation_params).promise();
+    
+                const queue_params = {
+                    InstanceId: req.instanceID, 
+                    Name: campaignID,
+                    Description: 'This is a campaign queue for campaignID: '+campaignID, 
+                    HoursOfOperationId: camapaignHrsOfOperation.HoursOfOperationId,
+                    Tags: {
+                        'campaign': campaignID,
+                        'owner': req.email
                     }
-                ],
-                Tags: {
-                    'campaign': campaignID,
-                    'owner': req.email
+                };
+    
+                const campaignQueue = await connect.createQueue(queue_params).promise();
+    
+                const routingProfileParams = {
+                    InstanceId: req.instanceID,
+                    Name: campaignID, 
+                    Description: 'Routing profile for campaign: '+campaignID,
+                    DefaultOutboundQueueId: campaignQueue.QueueId,
+                    MediaConcurrencies: [
+                        {
+                            Channel: campaignType,
+                            Concurrency: 1
+                        }
+                    ],
+                    QueueConfigs: [ 
+                        { 
+                           Delay: 0,
+                           Priority: 1,
+                           QueueReference: { 
+                              Channel: campaignType,
+                              QueueId: campaignQueue.QueueId
+                           }
+                        }
+                     ],
+                    Tags: {
+                        'campaign': campaignID,
+                        'owner': req.email
+                    }
+                };
+    
+                const campaignRoutingProfile = await connect.createRoutingProfile(routingProfileParams).promise();
+    
+                const campaignObject = {
+                    campaignID: campaignID,
+                    campaignName: campaignName,
+                    campaignType: campaignType,
+                    dateCreated: dateCreated,
+                    dateUpdated: dateCreated,
+                    campaignBucketLocation: data.Location,
+                    campaignRegion: campaignRegion,
+                    campaignStatus: campaignStatus,
+                    campaignStartDate: campaignStartDate,
+                    campaignEndDate: campaignEndDate,
+                    campaignOwner: campaignOwner,
+                    campaignCountry: campaignCountry,
+                    campaignZipCode: campaignZipCode,
+                    campaignZipCode: campaignZipCode,
+                    connectInstanceID: instanceID,
+                    campaignQueue: campaignQueue.QueueId,
+                    campaignHrsOfOperation: camapaignHrsOfOperation.HoursOfOperationId,
+                    campaignRoutingProfile: campaignRoutingProfile.RoutingProfileId,
                 }
-            };
-
-            const campaignRoutingProfile = await connect.createRoutingProfile(routingProfileParams).promise();
-
-            const campaignObject = {
-                campaignID: campaignID,
-                campaignName: campaignName,
-                campaignType: campaignType,
-                dateCreated: dateCreated,
-                dateUpdated: dateCreated,
-                campaignBucketLocation: data.Location,
-                campaignRegion: campaignRegion,
-                campaignStatus: campaignStatus,
-                campaignStartDate: campaignStartDate,
-                campaignEndDate: campaignEndDate,
-                campaignOwner: campaignOwner,
-                campaignCountry: campaignCountry,
-                campaignZipCode: campaignZipCode,
-                campaignZipCode: campaignZipCode,
-                connectInstanceID: instanceID,
-                campaignQueue: campaignQueue.QueueId,
-                campaignHrsOfOperation: camapaignHrsOfOperation.HoursOfOperationId,
-                campaignRoutingProfile: campaignRoutingProfile.RoutingProfileId,
+    
+                var campaign_params = {
+                    TableName: campaigns_table_name,
+                    Item: campaignObject,
+                    ConditionExpression: 'attribute_not_exists(campaignName)'
+                };
+            
+                ddb.put(campaign_params, function (err, data) {
+                    if (err) {
+                        logger.log("Campaign creation failed for customer"+campaignOwner+err, req);
+                    next(err.message);
+                    } else {
+                        logger.log("Campaign created successfully for customer:"+campaignOwner+" campaignID:"+campaignID, req);
+                        res.send({"campaignID": campaignID});
+                    }
+                });
             }
-
-            var campaign_params = {
-                TableName: campaigns_table_name,
-                Item: campaignObject,
-                ConditionExpression: 'attribute_not_exists(campaignName)'
-            };
-        
-            ddb.put(campaign_params, function (err, data) {
-                if (err) {
-                    logger.log("Campaign creation failed for customer"+campaignOwner+err, req);
-                next(err.message);
-                } else {
-                    logger.log("Campaign created successfully for customer:"+campaignOwner+" campaignID:"+campaignID, req);
-                    res.send({"campaignID": campaignID});
-                }
-            });
-        }
-    });
+        });
+    }catch(ex){
+        next(err.message)
+    }
 }
 
 exports.get = async function(req, res, next){

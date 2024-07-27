@@ -8,6 +8,8 @@ var ddbUpdateExpression = require("../../util/ddbUpdateExpression");
 const { connect } = require("../..");
 var s3Client = new AWS.S3();
 const agents_table_name = "Agents";
+const emailUtil = require("../../util/email");
+const constants = require("../../constants/connect_constants");
 
 exports.addUserToInstance = async function (req, res, next) {
   const agentID = req.body.agentID;
@@ -59,12 +61,10 @@ exports.addUserToInstance = async function (req, res, next) {
       }
     }
   );
-
+  const agentUserName = agentData.Item.agentFirstName + "_" + agentData.Item.agentLastName;
   const userParams = {
     InstanceId: instanceID,
-    Username:
-      agentData.Item.agentFirstName + "_" +
-      agentData.Item.agentLastName,
+    Username:agentUserName,
     Password: agentPassword,
     IdentityInfo: {
       FirstName: agentData.Item.agentFirstName,
@@ -78,21 +78,25 @@ exports.addUserToInstance = async function (req, res, next) {
     },
     SecurityProfileIds: [agentSecurityProfileID],
     RoutingProfileId: RoutingProfileId,
-    Tags: {
+    Tags: { 
       'campaign': campaignID,
       'owner': req.email
-    }
+   },
   };
 
-  connect.createUser(userParams, (err, userData) => {
+  connect.createUser(userParams, async (err, userData) => {
     if (err) {
       logger.logError("Error creating user for campaignOwner:" +campaignOwner, err, req);
       next(err.message);
     } else {
-      logger.log("User created successfully for customer:" +campaignOwner +" .User: " +agentData.agentEmail + " added to instance: " +
+      logger.log("User created successfully for customer:" +campaignOwner +" .User: " +agentData.Item.agentEmail + " added to instance: " +
         instanceID,
         req
       );
+      var instanceURL = instanceID === constants.connect_instances.defaultInstanceID ? constants.connect_instances.defaultInstanceURL:"";
+      var subject = "Agent Campaign Login Information";
+      var content = 'Hi ' + agentData.Item.agentFirstName+ ', you have been registered to ' + campaignData.Item.campaignName+', here are your login credentials to the instance username: '+agentUserName+' password: '+agentPassword+' instance access URL: '+instanceURL;
+      await emailUtil.sendEmail(agentData.Item.agentEmail, content, subject, req);
       res.send(userData);
     }
   });
