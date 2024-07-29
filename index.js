@@ -11,6 +11,7 @@ const texties = require("./routes/texties/texties");
 const flows = require("./routes/connect/flows");
 const queues = require("./routes/connect/queues");
 const routingProfiles = require("./routes/connect/routingProfiles");
+const phoneNumbers = require("./routes/connect/phoneNumbers");
 const instances = require("./routes/connect/instances");
 const services = require("./routes/services/services");
 const campaigns = require("./routes/campaigns/campaigns");
@@ -104,6 +105,7 @@ app.route("/campaigns")
     .get([tokenValidator.validate, validator.validate(params.campaigns.get)], campaigns.get)
     .patch([tokenValidator.validate, validator.validate(params.campaigns.patch)], campaigns.updateMetadata)
     .delete([tokenValidator.validate, validator.validate(params.campaigns.delete)], campaigns.delete);
+    
 app.route("/campaigns/list")
     .get([tokenValidator.validate], campaigns.list);
 
@@ -146,6 +148,18 @@ app.route("/connect/queues")
 // routingProfiles
 app.route("/connect/routing-profiles")
     .delete([tokenValidator.validate], routingProfiles.delete);
+
+// Phone Numbers
+app.route("/connect/phone-numbers")
+    .post([tokenValidator.validate], phoneNumbers.list_phone_numbers)
+    .get([tokenValidator.validate], phoneNumbers.search_available_phone_numbers)
+
+// Single Phone Number
+app.route("/connect/number")
+    .patch([tokenValidator.validate], phoneNumbers.associate_phone_number)
+    .put([tokenValidator.validate], phoneNumbers.claim_phone_number)
+    .patch([tokenValidator.validate], phoneNumbers.associate_phone_number)
+    .get([tokenValidator.validate], phoneNumbers.describe_phone_number);
 
 
 

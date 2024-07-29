@@ -13,15 +13,15 @@ exports.create = async function(req, res, next) {
         const campaigns_table_name = "Campaigns"
         const campaignID = uuid.v4();
         const campaignOwner = req.email;
-        const campaignName = req.query.campaignName;
-        const campaignType =  req.query.campaignType;
+        const campaignName = req.body.campaignName;
+        const campaignType =  req.body.campaignType;
         const dateCreated = dateUtil.getDate(req.requestTime);
-        const campaignStartDate = String(req.query.campaignStartDate);
-        const campaignEndDate = String(req.query.campaignEndDate);
-        const campaignStatus = req.query.campaignStatus;
-        const campaignRegion = req.query.campaignRegion;
-        const campaignCountry = req.query.campaignCountry;
-        const campaignZipCode = req.query.ZipCode ?  req.query.ZipCode : "NA";
+        const campaignStartDate = String(req.body.campaignStartDate);
+        const campaignEndDate = String(req.body.campaignEndDate);
+        const campaignStatus = req.body.campaignStatus;
+        const campaignRegion = req.body.campaignRegion;
+        const campaignCountry = req.body.campaignCountry;
+        const campaignZipCode = req.body.ZipCode ?  req.body.ZipCode : "NA";
     
         AWS.config.update({ region: "us-west-2" });
     
