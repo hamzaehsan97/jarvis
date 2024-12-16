@@ -25,8 +25,22 @@ const validate_params = require("./constants/validate");
 const schedular = require("./util/schedular");
 const validator = require("./middleware/validation");
 const ruid = require('express-ruid');
-
 const params = validate_params.api_params;
+
+process.on('uncaughtException', (error, origin) => {
+  console.log('----- Uncaught exception -----')
+  console.log(error)
+  console.log('----- Exception origin -----')
+  console.log(origin)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('----- Unhandled Rejection at -----')
+  console.log(promise)
+  console.log('----- Reason -----')
+  console.log(reason)
+})
+
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 8080;
@@ -75,7 +89,7 @@ app.post("/users/secret", validator.validate(params.secret.post), tokenValidator
 app.get("/users/logout", users.logout);
 
 // Auth routes
-app.get("/auth", validator.validate(params.auth.get), auth); // login in customer
+app.post("/auth", validator.validate(params.auth.get), auth); // login in customer
 
 // Comms routes
 app.post("/comms", tokenValidator.validate, communicate.send_email);
@@ -124,8 +138,6 @@ app.route("/agents/association")
     .put([tokenValidator.validate], connectUsers.addUserToInstance)
     .get([tokenValidator.validate], connectUsers.getUsersInInstance)
     .delete([tokenValidator.validate], connectUsers.deleteUserFromInstance);
-
-
 
 // instances
 app.route("/connect/instances")
