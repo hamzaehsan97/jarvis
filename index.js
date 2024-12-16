@@ -5,14 +5,17 @@ const path = require("path");
 const communicate = require("./routes/communicate/communicate");
 const auth = require("./routes/auth/auth");
 const users = require("./routes/users/users");
+const agents = require("./routes/agents/agents");
+const connectUsers = require("./routes/connect/users")
 const texties = require("./routes/texties/texties");
+const flows = require("./routes/connect/flows");
+const queues = require("./routes/connect/queues");
+const routingProfiles = require("./routes/connect/routingProfiles");
+const phoneNumbers = require("./routes/connect/phoneNumbers");
+const instances = require("./routes/connect/instances");
 const services = require("./routes/services/services");
+const campaigns = require("./routes/campaigns/campaigns");
 const passwords = require("./routes/passwords/passwords");
-const finance = require("./routes/finance/finance");
-const finance_plaid = require("./routes/finance/plaid");
-const finance_accounts = require("./routes/finance/accounts");
-const finance_balance = require("./routes/finance/balance");
-const finance_liabilities_reports = require("./routes/finance/reports/liabilities");
 const tokenValidator = require("./middleware/auth_middleware");
 const service_middleware = require("./middleware/service_middleware");
 const time_middleware = require("./middleware/time_middleware");
@@ -21,7 +24,23 @@ const role_middleware = require("./middleware/role_middleware");
 const validate_params = require("./constants/validate");
 const schedular = require("./util/schedular");
 const validator = require("./middleware/validation");
+const ruid = require('express-ruid');
 const params = validate_params.api_params;
+
+process.on('uncaughtException', (error, origin) => {
+  console.log('----- Uncaught exception -----')
+  console.log(error)
+  console.log('----- Exception origin -----')
+  console.log(origin)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('----- Unhandled Rejection at -----')
+  console.log(promise)
+  console.log('----- Reason -----')
+  console.log(reason)
+})
+
 const cors = require("cors");
 require("dotenv").config();
 const PORT = process.env.PORT || 8080;
@@ -40,11 +59,14 @@ async function start() {
   app.listen(PORT);
 }
 start();
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.set('trust proxy', true)
 app.use(cors());
 app.use(cookieParser());
+app.use(ruid());
 app.use(time_middleware.requestTime);
-
+// app.use(aws_creds);
 app.get("/", (req, res) => {
   res.status(200).send("welcome young'n").end();
 });
@@ -53,8 +75,8 @@ app.get("/", (req, res) => {
 
 //** User CRUD Routes */
 app.route("/users")
-  .post(users_middleware.createUser, users.create) //create a new user
-  .get( tokenValidator.validate, users.read) //read a user
+  .post(users.create) //create a new user
+  .get([tokenValidator.validate, validator.validate(params.verify.post)], users.read) //read a user
   .patch(tokenValidator.validate, users.update) //update a user
   .delete(tokenValidator.validate, users.delete); //delete a user
 
@@ -67,7 +89,7 @@ app.post("/users/secret", validator.validate(params.secret.post), tokenValidator
 app.get("/users/logout", users.logout);
 
 // Auth routes
-app.get("/auth", validator.validate(params.auth.get), auth);
+app.post("/auth", validator.validate(params.auth.get), auth); // login in customer
 
 // Comms routes
 app.post("/comms", tokenValidator.validate, communicate.send_email);
@@ -88,71 +110,74 @@ app.route("/services")
 app.route("/passwords")
   .post([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.create)
   .get([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.list)
-  .patch([tokenValidator.validate, service_middleware.service_activated("passwords"),validator.validate(params.passwords.patch)], passwords.update)
+  .patch([tokenValidator.validate, service_middleware.service_activated("passwords"), validator.validate(params.passwords.patch)], passwords.update)
   .delete([tokenValidator.validate, service_middleware.service_activated("passwords")], passwords.delete);
 
-
-// Finance routes
-//** Plaid routes */
-app.get(
-  "/finance/plaid/create_link_token",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_plaid.create_link_token
-);
-
-app.post(
-  "/finance/plaid/set_access_token",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_plaid.set_access_token
-);
-
-//** Balance routes */
-app.get(
-  "/finance/balance",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_balance.get_balance
-);
-
-//** Liabilities routes */
-app.post(
-  "/finance/liabilities",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.update_liabilities_report
-);
-
-app.patch(
-  "/finance/liabilities",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.get_liabilities_report
-);
-
-//** Accounts routes */
-app.get(
-  "/finance/accounts",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_accounts.list_finance_accounts
-);
+// campaigns
+app.route("/campaigns")
+    .put([tokenValidator.validate, validator.validate(params.campaigns.put)], campaigns.create)
+    .get([tokenValidator.validate, validator.validate(params.campaigns.get)], campaigns.get)
+    .patch([tokenValidator.validate, validator.validate(params.campaigns.patch)], campaigns.updateMetadata)
+    .delete([tokenValidator.validate, validator.validate(params.campaigns.delete)], campaigns.delete);
+    
+app.route("/campaigns/list")
+    .get([tokenValidator.validate], campaigns.list);
 
 
-//** Finance report routes */
-app.get(
-  "/finance/report",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.get_liabilities_report
-);
+// agents
+app.route("/agents")
+    .put([tokenValidator.validate, validator.validate(params.agents.put)], agents.create)
+    .get([tokenValidator.validate, validator.validate(params.agents.get)], agents.get)
+    .patch([tokenValidator.validate,validator.validate(params.agents.patch)],agents.updateMetadata)
+    .delete([tokenValidator.validate,validator.validate(params.agents.delete)],agents.delete);
 
-app.get(
-  "/finance/generate_report",
-  [tokenValidator.validate, service_middleware.service_activated("finance")],
-  finance_liabilities_reports.generateFinanceReport
-);
+app.route("/agents/list")
+    .get([tokenValidator.validate], agents.list);
 
-// Scheduled tasks below using node-cron
+app.route("/agents/association")
+    .put([tokenValidator.validate], connectUsers.addUserToInstance)
+    .get([tokenValidator.validate], connectUsers.getUsersInInstance)
+    .delete([tokenValidator.validate], connectUsers.deleteUserFromInstance);
+
+// instances
+app.route("/connect/instances")
+    .put([tokenValidator.validate, validator.validate(params.connect.instances.put)], instances.create);
+
+// flows
+app.route("/connect/flows")
+    .put([tokenValidator.validate], flows.create)
+    .get([tokenValidator.validate, validator.validate(params.connect.flows.get)], flows.get)
+    .delete([tokenValidator.validate,  validator.validate(params.connect.flows.get)], flows.delete);
+
+// flows
+app.route("/connect/flows/list")
+    .get([tokenValidator.validate], flows.list);
+
+// queues
+app.route("/connect/queues")
+    .delete([tokenValidator.validate], queues.delete);
+
+// routingProfiles
+app.route("/connect/routing-profiles")
+    .delete([tokenValidator.validate], routingProfiles.delete);
+
+// Phone Numbers
+app.route("/connect/phone-numbers")
+    .post([tokenValidator.validate], phoneNumbers.list_phone_numbers)
+    .get([tokenValidator.validate], phoneNumbers.search_available_phone_numbers)
+
+// Single Phone Number
+app.route("/connect/number")
+    .patch([tokenValidator.validate], phoneNumbers.associate_phone_number)
+    .put([tokenValidator.validate], phoneNumbers.claim_phone_number)
+    .patch([tokenValidator.validate], phoneNumbers.associate_phone_number)
+    .get([tokenValidator.validate], phoneNumbers.describe_phone_number);
+
+
 
 // Run report at 1:00 am UTC Friday => 5:00 pm PST on Thursday
 cron.schedule("00 01 * * 5", function () {
-  console.log("running finance schedular");
-  schedular.runFinanceReports();
+  console.log("running schedular");
 });
 
 module.exports = app;

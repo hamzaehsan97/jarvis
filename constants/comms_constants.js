@@ -5,8 +5,8 @@ exports.account_retrieval = {
   text: "Here is your one time account retrieval code: ",
 };
 exports.verify_email = {
-  subject: "Jarvis Account Verification",
-  text: "To log in you will need to provide Jarvis with this one time account verification code: ",
+  subject: "Simple Lead Generator Account Verification",
+  text: "To verify your account you will need to provide this one time account verification code: ",
 };
 exports.lead_assigned = {
   subject: "New Lead Assigned by ",

@@ -1,10 +1,6 @@
 exports.phone_number_validate = function (phone_number) {
-  const regex = /^[+]?[(]?[0-9]{3}[)]?[-s.]?[0-9]{3}[-s.]?[0-9]{4,6}$/im;
-  const correct = phone_number.match(regex);
-  if (!correct) {
-    throw new Error("Phone number is not valid");
-  }
-  return true;
+  const regex = new RegExp("^[+]{1}(?:[0-9\-\\(\\)\\/.]\s?){6,15}[0-9]{1}$");
+  return regex.test(phone_number);
 };
 
 exports.capitalize = function (words) {
