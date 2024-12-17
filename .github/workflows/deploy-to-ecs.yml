@@ -31,7 +31,7 @@ on:
     branches: [ "staging" ]
 
 env:
-  AWS_REGION: us-west-2
+  AWS_REGION: us-east-1
   ECR_REPOSITORY: v2h7l3c2/jarvis-1-0-0
   ECS_SERVICE: JarvisService
   ECS_CLUSTER: JarvisCluster
