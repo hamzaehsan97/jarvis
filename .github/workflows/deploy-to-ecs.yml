@@ -35,7 +35,7 @@ env:
   ECR_REPOSITORY: jarvis-1-0-0
   ECS_SERVICE: JarvisService
   ECS_CLUSTER: JarvisCluster
-  ECS_TASK_DEFINITION: .aws/task-definition.json
+  ECS_TASK_DEFINITION: task-definition.json
   CONTAINER_NAME: jarvis
 
 permissions:
