@@ -31,7 +31,7 @@ on:
     branches: [ "staging" ]
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-west-2
   ECR_REPOSITORY: jarvis-1-0-0
   ECS_SERVICE: JarvisService
   ECS_CLUSTER: JarvisCluster
@@ -74,6 +74,7 @@ jobs:
       run: |
         docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+        echo "image=$REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
 
     - name: Fill in the new image ID in the Amazon ECS task definition
