@@ -1,8 +1,8 @@
 "use strict"
 
 const uuid = require("uuid");
-const dateUtil = require("../../util/date");
-const logger = require("../../util/logger");
+const dateUtil = require("../../../util/date");
+const logger = require("../../../util/logger");
 var AWS = require("aws-sdk");
 var s3Client = new AWS.S3();
 const instances_table_name = "Instances";

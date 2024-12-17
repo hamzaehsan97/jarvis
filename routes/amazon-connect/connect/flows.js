@@ -1,9 +1,9 @@
 "use strict";
 const AWS = require("aws-sdk");
-const logger = require("../../util/logger");
-const constants = require("../../constants/connect_constants");
-const dateUtil = require("../../util/date");
-const ddbUpdateExpressionGenerator = require("../../util/ddbUpdateExpression");
+const logger = require("../../../util/logger");
+const constants = require("../../../constants/connect_constants");
+const dateUtil = require("../../../util/date");
+const ddbUpdateExpressionGenerator = require("../../../util/ddbUpdateExpression");
 
 var s3Client = new AWS.S3();
 const flows_table_name = "Flows";
