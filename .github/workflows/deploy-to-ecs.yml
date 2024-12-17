@@ -31,7 +31,8 @@ on:
     branches: [ "staging" ]
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION_US_EAST_1: us-east-1
+  AWS_REGION_US_WEST_2: us-west-2
   ECR_REPOSITORY: jarvis-1-0-0
   ECS_SERVICE: JarvisService
   ECS_CLUSTER: JarvisCluster
@@ -56,7 +57,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-region: ${{ env.AWS_REGION_US_EAST_1 }}
 
     - name: Login to Amazon ECR Public
       id: login-ecr-public
@@ -76,6 +77,12 @@ jobs:
         docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
         echo "image=$REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+    - name: Configure AWS credentials in US-WEST-2
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION_US_WEST_2 }}
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
