@@ -1,7 +1,6 @@
 "use strict";
 
-const mailman = require("../../util/mailman");
-const constants = require("../../constants/comms_constants");
+const mailman = require("../../../util/mailman");
 
 exports.send_email = function (req, res) {
   mailman
