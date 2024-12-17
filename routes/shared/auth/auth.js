@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
-const MongoBot = require("../../db/mongo");
-const encryption = require("../../util/encryption");
-const logger = require("../../util/logger")
+const MongoBot = require("../../../db/mongo");
+const encryption = require("../../../util/encryption");
+const logger = require("../../../util/logger")
 var AWS = require("aws-sdk");
 require("dotenv").config();
 

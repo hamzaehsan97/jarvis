@@ -1,10 +1,10 @@
 "use strict";
 
-const MongoBot = require("../../db/mongo");
-const mailman = require("../../util/mailman");
-const constants = require("../../constants/comms_constants");
-const otp_check = require("../../util/verify_otp");
-const service_constants = require("../../constants/service_constants");
+const MongoBot = require("../../../db/mongo");
+const mailman = require("../../../util/mailman");
+const constants = require("../../../constants/comms_constants");
+const otp_check = require("../../../util/verify_otp");
+const service_constants = require("../../../constants/service_constants");
 
 // Activate/Deactivate service based on service name and boolean active value
 exports.activate_service = async function (req, res) {

@@ -1,0 +1,154 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-west-2:590183845932:task-definition/JarvisTask:4",
+    "containerDefinitions": [
+        {
+            "name": "jarvis",
+            "image": "public.ecr.aws/v2h7l3c2/jarvis-1-0-0:latest",
+            "cpu": 256,
+            "memory": 512,
+            "memoryReservation": 256,
+            "portMappings": [
+                {
+                    "name": "jarvis-8080-tcp",
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "EMAIL_SERVICE",
+                    "value": "gmail"
+                },
+                {
+                    "name": "aws_secret_access_key",
+                    "value": "k1AlYDS9Tc2MLPS7Xn9OTzztXuopcf+njVbO6UTE"
+                },
+                {
+                    "name": "PROD_DB_URI",
+                    "value": "mongodb+srv://hehsan:w6gsojMfmMEsHTe4@cluster0.mq1lhor.mongodb.net/?retryWrites=true&w=majority"
+                },
+                {
+                    "name": "EMAIL_SENDER",
+                    "value": "hamzaehsan@outsourcers.io"
+                },
+                {
+                    "name": "SECRET_KEY",
+                    "value": "<Buffer 75 bd 49 81 f0 4b 11 46 b7 7c 08 62 81 03 05 bb ba 57 e0 4b 06 da 9b 02 99 ed 78 78 03 a6  c6 b5>"
+                },
+                {
+                    "name": "ENV",
+                    "value": "dev"
+                },
+                {
+                    "name": "TWILIO_TOKEN",
+                    "value": "3af30a88cd8b8349578c3d2b493e399e"
+                },
+                {
+                    "name": "URL",
+                    "value": "http://localhost:3000"
+                },
+                {
+                    "name": "EMAIL_PASS",
+                    "value": "hibiqwkedaolsrmo"
+                },
+                {
+                    "name": "aws_access_key_id",
+                    "value": "AKIAYS2NS2AWCDP3OPMA"
+                },
+                {
+                    "name": "DEV_DB_URI",
+                    "value": "mongodb+srv://hehsan:Sabeehkki132$@cluster0.h8plqnr.mongodb.net/?retryWrites=true&w=majority"
+                },
+                {
+                    "name": "AUTH_SECRET",
+                    "value": "alsjkfbqo3bj3blwiohvosiudbvwoiuhv9wo49iut02ibgowndajfgnqfjwnejnq3kj4n2k3jalfnklfnsaldknflsdeAS"
+                },
+                {
+                    "name": "SECRET_IV",
+                    "value": "<Buffer 31 f4 74 3b 74 52 e7 82 0d 3f 47 08 f3 85 2d fb>"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/JarvisTask",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:8080 || exit 1"
+                ],
+                "interval": 300,
+                "timeout": 60,
+                "retries": 3,
+                "startPeriod": 300
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "JarvisTask",
+    "taskRoleArn": "arn:aws:iam::590183845932:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::590183845932:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 4,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2024-06-29T01:21:35.560Z",
+    "registeredBy": "arn:aws:iam::590183845932:root",
+    "tags": []
+}

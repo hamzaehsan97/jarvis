@@ -1,10 +1,10 @@
 "use strict";
 
 const uuid = require("uuid");
-const dateUtil = require("../../util/date");
-const logger = require("../../util/logger");
+const dateUtil = require("../../../util/date");
+const logger = require("../../../util/logger");
 var AWS = require("aws-sdk");
-var ddbUpdateExpression = require("../../util/ddbUpdateExpression");
+var ddbUpdateExpression = require("../../../util/ddbUpdateExpression");
 var s3Client = new AWS.S3();
 const agents_table_name = "Agents";
 

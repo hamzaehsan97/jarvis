@@ -1,6 +1,6 @@
 "use strict";
 const AWS = require("aws-sdk");
-const logger = require("../../util/logger");
+const logger = require("../../../util/logger");
 
 exports.delete = async function(req,res,next){
     const routingProfileID = req.body.routingProfileID;

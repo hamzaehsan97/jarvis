@@ -1,6 +1,6 @@
 "use strict"
 const AWS = require('aws-sdk');
-const logger = require("../../util/logger");
+const logger = require("../../../util/logger");
 
 
 exports.list_phone_numbers = function(req,res,next){

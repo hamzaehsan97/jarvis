@@ -1,15 +1,15 @@
 "use strict";
 
-const MongoBot = require("../../db/mongo");
-const mailman = require("../../util/mailman");
-const constants = require("../../constants/comms_constants");
-const otp_check = require("../../util/verify_otp");
-const encryption = require("../../util/encryption");
-const validation = require("../../util/validation");
-const logger = require("../../util/logger");
-const connect_constants = require("../../constants/connect_constants");
+const MongoBot = require("../../../db/mongo");
+const mailman = require("../../../util/mailman");
+const constants = require("../../../constants/comms_constants");
+const otp_check = require("../../../util/verify_otp");
+const encryption = require("../../../util/encryption");
+const validation = require("../../../util/validation");
+const logger = require("../../../util/logger");
+const connect_constants = require("../../../constants/connect_constants");
 const users_table_name = "Accounts";
-const emailUtil = require("../../util/email");
+const emailUtil = require("../../../util/email");
 var AWS = require("aws-sdk");
 
 require("dotenv").config();

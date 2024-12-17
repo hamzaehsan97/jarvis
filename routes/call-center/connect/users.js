@@ -1,15 +1,15 @@
 "use strict";
 
 const uuid = require("uuid");
-const dateUtil = require("../../util/date");
-const logger = require("../../util/logger");
+const dateUtil = require("../../../util/date");
+const logger = require("../../../util/logger");
 var AWS = require("aws-sdk");
-var ddbUpdateExpression = require("../../util/ddbUpdateExpression");
-const { connect } = require("../..");
+var ddbUpdateExpression = require("../../../util/ddbUpdateExpression");
+const { connect } = require("../../..");
 var s3Client = new AWS.S3();
 const agents_table_name = "Agents";
-const emailUtil = require("../../util/email");
-const constants = require("../../constants/connect_constants");
+const emailUtil = require("../../../util/email");
+const constants = require("../../../constants/connect_constants");
 
 exports.addUserToInstance = async function (req, res, next) {
   const agentID = req.body.agentID;
