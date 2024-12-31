@@ -13,6 +13,7 @@ const create = async function (req, res, next) {
   const contactFlowContent = req.body.contactFlowContent;
   const contactFlowType = req.body.contactFlowType;
   const campaignID = req.body.campaignID;
+  const flowDescription = req.body.flowDescription ? req.body.flowDescription : contactFlowName + "-" + campaignID;
   const dateCreated = dateUtil.getDate(req.requestTime);
 
   AWS.config.update({ region: "us-west-2" });
@@ -47,6 +48,7 @@ const create = async function (req, res, next) {
       const flowObject = {
         flowID: { S: data.ContactFlowId },
         flowName: { S: contactFlowName },
+        flowDescription: { S: flowDescription },
         flowType: { S: contactFlowType },
         flowOwner: { S: req.email },
         flowArn: { S: data.ContactFlowArn },
@@ -76,39 +78,6 @@ const create = async function (req, res, next) {
               req.email +
               " flowID:" +
               data.ContactFlowId,
-            req
-          );
-        }
-      });
-      const dynamoDB = new AWS.DynamoDB.DocumentClient();
-      const campaignsUpdateParams = {
-        TableName: "Campaigns",
-        Key: {
-          campaignOwner: req.email,
-          campaignID: campaignID,
-        },
-        UpdateExpression:
-          "SET #af = list_append(if_not_exists(#af, :empty_list), :associatedFlow)",
-        ExpressionAttributeNames: {
-          "#af": "associatedFlows",
-        },
-        ExpressionAttributeValues: {
-          ":associatedFlow": [{"flowName": contactFlowName, "flowID": data.ContactFlowId}],
-          ":empty_list": [],
-        },
-        ReturnValues: "UPDATED_NEW", // Return the updated attributes
-      };
-
-      dynamoDB.update(campaignsUpdateParams, function (err, updateResult) {
-        if (err) {
-          logger.logError("Unable to update item:" + campaignID, err, req);
-          next(err.message);
-        } else {
-          logger.log(
-            "Successfully associated flow: " +
-              data.ContactFlowId +
-              " to campaign: " +
-              campaignID,
             req
           );
           res.send({ FlowID: data.ContactFlowId });
