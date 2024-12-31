@@ -13,6 +13,9 @@ const create = async function (req, res, next) {
   const contactFlowContent = req.body.contactFlowContent;
   const contactFlowType = req.body.contactFlowType;
   const campaignID = req.body.campaignID;
+  const flowDescription = req.body.flowDescription
+    ? req.body.flowDescription
+    : contactFlowName + "-" + campaignID;
   const dateCreated = dateUtil.getDate(req.requestTime);
 
   AWS.config.update({ region: "us-west-2" });
@@ -47,6 +50,7 @@ const create = async function (req, res, next) {
       const flowObject = {
         flowID: { S: data.ContactFlowId },
         flowName: { S: contactFlowName },
+        flowDescription: { S: flowDescription },
         flowType: { S: contactFlowType },
         flowOwner: { S: req.email },
         flowArn: { S: data.ContactFlowArn },
@@ -76,39 +80,6 @@ const create = async function (req, res, next) {
               req.email +
               " flowID:" +
               data.ContactFlowId,
-            req
-          );
-        }
-      });
-      const dynamoDB = new AWS.DynamoDB.DocumentClient();
-      const campaignsUpdateParams = {
-        TableName: "Campaigns",
-        Key: {
-          campaignOwner: req.email,
-          campaignID: campaignID,
-        },
-        UpdateExpression:
-          "SET #af = list_append(if_not_exists(#af, :empty_list), :associatedFlow)",
-        ExpressionAttributeNames: {
-          "#af": "associatedFlows",
-        },
-        ExpressionAttributeValues: {
-          ":associatedFlow": [{"flowName": contactFlowName, "flowID": data.ContactFlowId}],
-          ":empty_list": [],
-        },
-        ReturnValues: "UPDATED_NEW", // Return the updated attributes
-      };
-
-      dynamoDB.update(campaignsUpdateParams, function (err, updateResult) {
-        if (err) {
-          logger.logError("Unable to update item:" + campaignID, err, req);
-          next(err.message);
-        } else {
-          logger.log(
-            "Successfully associated flow: " +
-              data.ContactFlowId +
-              " to campaign: " +
-              campaignID,
             req
           );
           res.send({ FlowID: data.ContactFlowId });
@@ -208,86 +179,33 @@ exports.delete = function (req, res, next) {
       next(err.message);
     } else {
       logger.log("successfully deleted flow with flowID:" + flowID, req);
-      var params = {
+      AWS.config.update({ region: "us-west-2" });
+      const dynamoDB = new AWS.DynamoDB.DocumentClient();
+      var ddbDeleteParams = {
         Key: {
-          flowID: flowID,
           flowOwner: flowOwner,
+          flowID: flowID,
         },
         TableName: flows_table_name,
       };
-
-      AWS.config.update({ region: "us-west-2" });
-      const dynamoDB = new AWS.DynamoDB.DocumentClient();
-
-      //Read contact flow from flows db to get associated campaignID
-      dynamoDB.get(params, function (err, data) {
+      // delete flows record from flows table
+      dynamoDB.delete(ddbDeleteParams, function (err, deleteFlowItemData) {
         if (err) {
-          logger.log("Failed to get flow for customer: " + flowOwner + " with flowID: " + flowID, err, req);
+          logger.logError(
+            "failed to delete flow: " + flowID + " for customer " + flowOwner,
+            err,
+            req
+          );
           next(err.message);
         } else {
-
-            var params = {
-                Key:{
-                    "campaignOwner":req.email,
-                    "campaignID":data.Item.campaignID
-                },
-                TableName: "Campaigns"
-            }
-            dynamoDB.get(params, function(err, campaignData) {
-                if (err){
-                    logger.logError("Failed to get campaign for customer: "+req.email+" with campaign: "+data.Item.campaignID, err, req);
-                   next(err.message);
-                }else{
-                    logger.log("Successfully returned campaign for customer: "+req.email+" with campaign: "+data.Item.campaignID, req);
-                    const { associatedFlows } = campaignData.Item;
-                    if (!associatedFlows || !Array.isArray(associatedFlows)) {
-                        console.log(associatedFlows)
-                        return res.status(404).json({ error: 'No associated flows found' });
-                    }
-                    const index = associatedFlows.indexOf(flowID);
-                    if (index === -1) {
-                        return res.status(404).json({ error: 'Flow ID not found in associated flows' });
-                    }
-                    // Remove the flowId from the list
-                    associatedFlows.splice(index, 1);
-
-                    const updateParams = {
-                        TableName: 'Campaigns',
-                        Key: { campaignOwner:req.email, campaignID: data.Item.campaignID},
-                        UpdateExpression: 'SET associatedFlows = :associatedFlows',
-                        ExpressionAttributeValues: {
-                          ':associatedFlows': associatedFlows
-                        },
-                        ReturnValues: 'UPDATED_NEW'
-                    };
-        // Remove the flow association from the campaigns 
-          dynamoDB.update(updateParams, (err, removeAssociationData) => {
-            if (err) {
-              logger.logError("failed to delete flow association for campaigns for flowID: " + flowID +" in campaign: " +data.Item.campaignID,err,req);
-              next(err.message);
-            } else {
-                logger.log("successfully deleted flow association for campaigns for flowID: " + flowID +" in campaign: " + data.Item.campaignID, req);
-                var ddbDeleteParams = {
-                    Key: {
-                    flowOwner:  flowOwner,
-                    flowID: flowID,
-                    },
-                    TableName: flows_table_name,
-                };
-                // delete flows record from flows table
-                dynamoDB.delete(ddbDeleteParams, function (err, deleteFlowItemData) {
-                if (err) {
-                    logger.logError("failed to delete flow: " + flowID +" for customer " + flowOwner, err, req);
-                    next(err.message);
-                } else {
-                    logger.log("successfully deleted flow: " + flowID +" for customer " + flowOwner, req);
-                    res.send("successfully deleted flow: "+flowID);
-                }
-                });
-                }
-            });
-            }
-        });
+          logger.log(
+            "successfully deleted flow: " +
+              flowID +
+              " for customer " +
+              flowOwner,
+            req
+          );
+          res.send("successfully deleted flow: " + flowID);
         }
       });
     }
