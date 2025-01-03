@@ -3,8 +3,8 @@ const AWS = require("aws-sdk");
 const logger = require("../../../util/logger");
 
 exports.describe = async function(req,res,next){
-    const hoursOfOperationId = req.body.hoursOfOperationId;
-    const instanceID = req.body.instanceID;
+    const hoursOfOperationId = req.query.hoursOfOperationId;
+    const instanceID = req.query.instanceID;
   
     AWS.config.update({ region: "us-west-2" });
 
