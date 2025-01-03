@@ -3,6 +3,7 @@ const flows = require("./connect/flows");
 const queues = require("./connect/queues");
 const routingProfiles = require("./connect/routingProfiles");
 const phoneNumbers = require("./connect/phoneNumbers");
+const hoursOfOperation = require("./connect/hoursOfOperation");
 const instances = require("./connect/instances");
 const campaigns = require("./campaigns/campaigns");
 const tokenValidator = require("../../middleware/auth_middleware");
@@ -81,6 +82,10 @@ router.route("/connect/number")
     .patch([tokenValidator.validate], phoneNumbers.associate_phone_number)
     .get([tokenValidator.validate], phoneNumbers.describe_phone_number);
 
+// Hours of Operation
+router.route("/connect/hours-of-operation")
+    .get([tokenValidator.validate], hoursOfOperation.describe)
+    .patch([tokenValidator.validate], hoursOfOperation.update);
 
 module.exports = router;
 
