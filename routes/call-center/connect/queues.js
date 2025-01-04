@@ -18,7 +18,7 @@ exports.delete = async function(req,res,next){
     connectClient.deleteQueue(params, function(err, data){
         if(err){
             logger.logError("failed to delete queue for customer: "+req.email, err, req);
-            next(err.message)
+            next(new Error(err))
         }else{
             logger.log("successfully deleted queue for customer: "+req.email, req);
             res.send(data);

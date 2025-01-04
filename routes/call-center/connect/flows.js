@@ -38,7 +38,7 @@ const create = async function (req, res, next) {
         err,
         req
       );
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log(
         "successfully created contactFlow for customer: " +
@@ -73,7 +73,7 @@ const create = async function (req, res, next) {
             err,
             req
           );
-          next(err.message);
+          next(new Error(err));
         } else {
           logger.log(
             "flow created successfully for customer: " +
@@ -108,7 +108,7 @@ const list = async function (req, res, next) {
   ddb.query(params, function (err, data) {
     if (err) {
       logger.log("Failed to get flows for customer: " + req.email, err, req);
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log("Successfully returned flows for customer: " + req.email, req);
       res.send(data);
@@ -146,7 +146,7 @@ const get = async function (req, res, next) {
         err,
         req
       );
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log(
         "Successfully returned flow for customer: " +
@@ -176,7 +176,7 @@ exports.delete = function (req, res, next) {
   connect.deleteContactFlow(deleteParams, (err, data) => {
     if (err) {
       logger.logError("Error deleting contact flow:" + flowID, err, req);
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log("successfully deleted flow with flowID:" + flowID, req);
       AWS.config.update({ region: "us-west-2" });
@@ -196,7 +196,7 @@ exports.delete = function (req, res, next) {
             err,
             req
           );
-          next(err.message);
+          next(new Error(err));
         } else {
           logger.log(
             "successfully deleted flow: " +

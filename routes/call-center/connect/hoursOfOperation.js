@@ -18,7 +18,7 @@ exports.describe = async function(req,res,next){
     connectClient.describeHoursOfOperation(params, function(err, data){
         if(err){
             logger.logError("failed to describe hoursOfOperation for customer: "+req.email, err, req);
-            next(err.message)
+            next(new Error(err))
         }else{
             logger.log("successfully describe hoursOfOperation for customer: "+req.email, req);
             res.send(data);
@@ -47,7 +47,7 @@ exports.update = async function(req,res,next){
     connectClient.UpdateHoursOfOperationCommand(params, function(err, data){
         if(err){
             logger.logError("failed to describe hoursOfOperation for customer: "+req.email, err, req);
-            next(err.message)
+            next(new Error(err))
         }else{
             logger.log("successfully describe hoursOfOperation for customer: "+req.email, req);
             res.send(data);

@@ -31,7 +31,7 @@ exports.create = async function(req, res, next) {
         s3Client.upload(params, async function (err, data) {
             if (err) {
                 logger.log("S3 folder creation failed for:"+campaignOwner+err, req);
-            next(err.message);
+            next(new Error(err));
             } else {
                 logger.log("S3 folder creation successful for customer:"+campaignOwner+" campaignID:"+campaignID, req);
     
@@ -152,7 +152,7 @@ exports.create = async function(req, res, next) {
                 ddb.put(campaign_params, function (err, data) {
                     if (err) {
                         logger.log("Campaign creation failed for customer"+campaignOwner+err, req);
-                    next(err.message);
+                    next(new Error(err));
                     } else {
                         logger.log("Campaign created successfully for customer:"+campaignOwner+" campaignID:"+campaignID, req);
                         res.send({"campaignID": campaignID});
@@ -161,7 +161,7 @@ exports.create = async function(req, res, next) {
             }
         });
     }catch(ex){
-        next(err.message)
+        next(new Error(err))
     }
 }
 
@@ -187,7 +187,7 @@ exports.get = async function(req, res, next){
     ddb.getItem(params, function(err, data) {
         if (err){
             logger.log("Failed to get campaign for customer: "+campaignOwner+" with campaign: "+campaignID + err, req);
-           next(err.message);
+           next(new Error(err));
         }else{
             logger.log("Successfully returned campaign for customer: "+campaignOwner+" with campaign: "+campaignID, req);
             res.send(data);
@@ -214,7 +214,7 @@ exports.list = async function(req, res, next){
     ddb.query(params, function(err, data) {
         if (err){
             logger.log("Failed to get campaigns for customer: "+campaignOwner + err, req);
-           next(err.message);
+           next(new Error(err));
         }else{
             logger.log("Successfully returned campaign for customer: "+campaignOwner, req);
             res.send(data);
@@ -251,7 +251,7 @@ exports.updateMetadata = async function(req, res, next){
         ddb.updateItem(params, function(err, data) {
             if (err){
                 logger.logError("Unable to update item:"+campaignID, err, req);
-               next(err.message);
+               next(new Error(err));
             }else{
                 logger.log("Successfully returned campaign for customer: "+campaignOwner, req);
                 res.send(data);
@@ -284,7 +284,7 @@ exports.delete = function(req, res){
     ddb.deleteItem(params, function(err, data) {
         if(err){
             logger.logError("failed to delete campaign: "+campaignID+" for customer "+campaignOwner,err, req)
-           next(err.message);
+           next(new Error(err));
         }else{
             logger.log("successfully deleted campaign: "+campaignID+" for customer "+campaignOwner, req)
             res.send(data);

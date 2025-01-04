@@ -87,5 +87,17 @@ router.route("/connect/hours-of-operation")
     .get([tokenValidator.validate], hoursOfOperation.describe)
     .patch([tokenValidator.validate], hoursOfOperation.update);
 
+
+// Error-handling middleware
+router.use((err, req, res, next) => {
+    const status = (err.status || err.statusCode)|| 500;
+    res.status(status).json({
+        error: {
+            name: err.name || 'Error',
+            message: err.message || 'An unexpected error occurred.',
+        },
+    });
+});
+
 module.exports = router;
 

@@ -18,7 +18,7 @@ exports.delete = async function(req,res,next){
     connectClient.deleteRoutingProfile(params, function(err, data){
         if(err){
             logger.logError("failed to delete routingProfile for customer: "+req.email, err, req);
-            next(err.message)
+            next(new Error(err))
         }else{
             logger.log("successfully deleted routingProfile for customer: "+req.email, req);
             res.send(data);

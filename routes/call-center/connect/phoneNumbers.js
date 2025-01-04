@@ -39,7 +39,7 @@ exports.search_available_phone_numbers = function(req,res,next){
     connectClient.searchAvailablePhoneNumbers(list_phone_number_params, function(err, data){
         if(err){
             logger.logError("Unable to search phone numbers for customer"+req.email, err, req);
-            next(err.message);
+            next(new Error(err));
         }else{
             res.send(data);
         }
@@ -68,7 +68,7 @@ exports.claim_phone_number = function(req,res,next){
     connectClient.claimPhoneNumber(claim_phone_number_params, function(err, data){
         if(err){
             logger.logError("Unable to claim phone number for customer"+req.email, err, req);
-            next(err.message);
+            next(new Error(err));
         }else{
             res.send(data);
         }
@@ -95,7 +95,7 @@ exports.associate_phone_number = function (req, res, next) {
     connectClient.associatePhoneNumberContactFlow(associate_phone_number_params, function (err, data) {
         if (err) {
             logger.logError("Unable to associate phone number to flow for customer: " + req.email, err, req);
-            next(err.message);
+            next(new Error(err));
         } else {
             console.log("Updating Flows table with phone number" + phone_number + " for flow ID: " + contact_flow_id);
             // Add phone number ID to flows DDB table for flow ID
@@ -126,7 +126,7 @@ exports.associate_phone_number = function (req, res, next) {
                         err,
                         req
                     );
-                    next(err.message);
+                    next(new Error(err));
                 } else {
                     logger.log(
                         "Successfully updated flow for customer: " +
@@ -158,7 +158,7 @@ exports.describe_phone_number = function(req,res,next){
     connectClient.describePhoneNumber(phone_number_params, function(err, data){
         if(err){
             logger.logError("Unable to describe phone number for customer"+req.email, err, req);
-            next(err.message);
+            next(new Error(err));
         }else{
             res.send(data);
         }

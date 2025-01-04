@@ -87,7 +87,7 @@ exports.addUserToInstance = async function (req, res, next) {
   connect.createUser(userParams, async (err, userData) => {
     if (err) {
       logger.logError("Error creating user for campaignOwner:" +campaignOwner, err, req);
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log("User created successfully for customer:" +campaignOwner +" .User: " +agentData.Item.agentEmail + " added to instance: " +
         instanceID,
@@ -114,7 +114,7 @@ exports.getUsersInInstance = function (req, res, next) {
   connect.listUsers(params, (err, data) => {
     if (err) {
       logger.logError('Error listing users for customer:' + req.email, err, req);
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log('Users listed successfully for customer:' + req.email, req);
       res.send(data);
@@ -137,7 +137,7 @@ exports.deleteUserFromInstance = function (req, res, next) {
   connect.deleteUser(params, (err, data) => {
     if (err) {
       logger.logError('Error deleting instance user for customer:' + req.email + " with userID: " + userID, err, req);
-      next(err.message);
+      next(new Error(err));
     } else {
       logger.log("Successfully deleted instance user for customer:" + req.email + " with userID: " + userID, req);
       res.send(data);
