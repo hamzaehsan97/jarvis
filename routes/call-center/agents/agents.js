@@ -9,7 +9,7 @@ var s3Client = new AWS.S3();
 const agents_table_name = "Agents";
 
 exports.create = async function (req, res, next) {
-  const agentID = uuid.v4();
+  const agentId = uuid.v4();
   const agentFirstName = req.body.agentFirstName;
   const agentLastName = req.body.agentLastName;
   const agentEmail = req.body.agentEmail;
@@ -24,7 +24,7 @@ exports.create = async function (req, res, next) {
   // Create a folder inside s3 campaigns
   var params = {
     Bucket: "agents-directory",
-    Key: agentID,
+    Key: agentId,
     ACL: "private",
     Body: "body does not matter",
   };
@@ -37,7 +37,7 @@ exports.create = async function (req, res, next) {
       logger.log("S3 folder creation successful for agent:" + agentEmail, req);
 
       const agentObject = {
-        agentID: agentID,
+        agentId: agentId,
         agentFirstName:  agentFirstName,
         agentLastName: agentLastName,
         dateCreated: dateCreated,
@@ -73,11 +73,11 @@ exports.create = async function (req, res, next) {
               agentEmail +
               "for customer:" +
               req.email +
-              " agentID:" +
-              agentID,
+              " agentId:" +
+              agentId,
             req
           );
-          res.send({ agentID: agentID });
+          res.send({ agentId: agentId });
         }
       });
     }
@@ -86,14 +86,14 @@ exports.create = async function (req, res, next) {
 
 exports.get = async function (req, res, next) {
   const campaignId = req.query.campaignId;
-  const agentID = req.query.agentID;
+  const agentId = req.query.agentId;
   var params = {
     Key: {
       campaignId: {
         S: campaignId,
       },
-      agentID: {
-        S: agentID,
+      agentId: {
+        S: agentId,
       },
     },
     TableName: agents_table_name,
@@ -107,7 +107,7 @@ exports.get = async function (req, res, next) {
     if (err) {
       logger.logError(
         "Failed to get agent " +
-          agentID +
+          agentId +
           " with agentEmail: " +
           agentEmail +
           " for customer: " +
@@ -119,7 +119,7 @@ exports.get = async function (req, res, next) {
     } else {
       logger.log(
         "Successfully returned agent: " +
-          agentID +
+          agentId +
           " with agentEmail: " +
           agentEmail +
           " for customer: " +
@@ -162,7 +162,7 @@ exports.list = async function (req, res, next) {
 };
 
 exports.updateMetadata = async function (req, res, next) {
-  const agentID = req.query.agentID;
+  const agentId = req.query.agentId;
   const agentEmail = req.query.agentEmail;
   const campaignId = req.query.campaignId;
 
@@ -181,7 +181,7 @@ exports.updateMetadata = async function (req, res, next) {
       const params = {
         TableName: agents_table_name,
         Key: {
-          agentID: { S: agentID },
+          agentId: { S: agentId },
           agentEmail: { S: agentEmail },
           campaignId: { S: campaignId },
         },
@@ -217,7 +217,7 @@ exports.updateMetadata = async function (req, res, next) {
 
 exports.delete = function (req, res, next) {
   const campaignId = req.query.campaignId;
-  const agentID = req.query.agentID;
+  const agentId = req.query.agentId;
   AWS.config.update({ region: "us-west-2" });
 
   var params = {
@@ -225,8 +225,8 @@ exports.delete = function (req, res, next) {
       campaignId: {
         S: campaignId,
       },
-      agentID: {
-        S: agentID,
+      agentId: {
+        S: agentId,
       },
     },
     TableName: agents_table_name,

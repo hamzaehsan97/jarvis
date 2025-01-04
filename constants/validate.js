@@ -12,10 +12,10 @@ const api_params = {
         "delete": ["campaignID"]
     },
     "agents":{
-        "put": ["agentFirstName","agentLastName","agentEmail","agentPhoneNumber","agentCountry","agentWorkingHours","agentSpecialty","agentQualifications","agentLanguages"],
-        "get": ["agentID","agentEmail"],
-        "patch": ["agentID", "agentEmail"],
-        "delete": ["agentEmail", "agentID"],
+        "put": ["agentFirstName","agentLastName","agentEmail","agentLanguages", "campaignId"],
+        "get": ["agentId","campaignId"],
+        "patch": ["agentId", "campaignId"],
+        "delete": ["agentEmail", "campaignId"],
     },
     "connect":{
         "flows":{

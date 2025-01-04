@@ -12,7 +12,7 @@ const emailUtil = require("../../../util/email");
 const constants = require("../../../constants/connect_constants");
 
 exports.addUserToInstance = async function (req, res, next) {
-  const agentID = req.body.agentID;
+  const agentId = req.body.agentId;
   const campaignOwner = req.email;
   const agentEmail = req.body.agentEmail;
   const agentPassword = req.body.agentPassword;
@@ -36,7 +36,7 @@ exports.addUserToInstance = async function (req, res, next) {
   var agentParams = {
     Key: {
       campaignID: campaignID,
-      agentID: agentID,
+      agentId: agentId,
     },
     TableName: "Agents",
   };
