@@ -35,7 +35,7 @@ exports.addUserToInstance = async function (req, res, next) {
 
   var agentParams = {
     Key: {
-      agentEmail: agentEmail,
+      campaignID: campaignID,
       agentID: agentID,
     },
     TableName: "Agents",

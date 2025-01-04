@@ -10,19 +10,14 @@ const agents_table_name = "Agents";
 
 exports.create = async function (req, res, next) {
   const agentID = uuid.v4();
-  const agentFirstName = req.query.agentFirstName;
-  const agentLastName = req.query.agentLastName;
-  const agentEmail = req.query.agentEmail;
+  const agentFirstName = req.body.agentFirstName;
+  const agentLastName = req.body.agentLastName;
+  const agentEmail = req.body.agentEmail;
   const dateCreated = dateUtil.getDate(req.requestTime);
-  const agentPhoneNumber = String(req.query.agentPhoneNumber);
-  const agentCountry = req.query.agentCountry;
-  const agentWorkingHours = req.query.agentWorkingHours;
-  const agentSpecialty = req.query.agentSpecialty;
-  const agentQualifications = req.query.agentQualifications;
-  const agentAboutMe = req.query.agentAboutMe ? req.query.agentAboutMe : "NA";
-  const agentAssignedFlows = "";
-  const agentAssignedCampaigns = "";
-  const agentLanguages = req.query.agentLanguages;
+  const agentPhoneNumber = String(req.body.agentPhoneNumber);
+  const agentCountry = req.body.agentCountry;
+  const campaignId = req.body.campaignId;   
+  const agentLanguages = req.body.agentLanguages;
 
   AWS.config.update({ region: "us-west-2" });
 
@@ -50,13 +45,9 @@ exports.create = async function (req, res, next) {
         agentBucketLocation: data.Location,
         agentPhoneNumber: agentPhoneNumber,
         agentCountry: agentCountry,
-        agentWorkingHours: agentWorkingHours,
-        agentSpecialty: agentSpecialty,
-        agentQualifications: agentQualifications,
-        agentAboutMe: agentAboutMe,
         agentLanguages: agentLanguages,
-        agentAssignedCampaigns:  agentAssignedCampaigns,
-        available: true,
+        campaignId:  campaignId,
+        status: "ACTIVE",
       };
 
       // Create the DynamoDB service object
@@ -94,12 +85,12 @@ exports.create = async function (req, res, next) {
 };
 
 exports.get = async function (req, res, next) {
-  const agentEmail = req.query.agentEmail;
+  const campaignId = req.query.campaignId;
   const agentID = req.query.agentID;
   var params = {
     Key: {
-      agentEmail: {
-        S: agentEmail,
+      campaignId: {
+        S: campaignId,
       },
       agentID: {
         S: agentID,
@@ -141,10 +132,15 @@ exports.get = async function (req, res, next) {
 };
 
 exports.list = async function (req, res, next) {
-  const listFilters = req.query.filters;
+  const campaignId = req.query.campaignId;
   var params = {
     TableName: agents_table_name,
     Limit: 100, // Limit the number of items to 10
+    Key: {
+      campaignId: {
+        S: campaignId,
+      },
+    }
   };
 
   AWS.config.update({ region: "us-west-2" });
@@ -168,6 +164,8 @@ exports.list = async function (req, res, next) {
 exports.updateMetadata = async function (req, res, next) {
   const agentID = req.query.agentID;
   const agentEmail = req.query.agentEmail;
+  const campaignId = req.query.campaignId;
+
   try {
     let updateAttributeList = req.query.updateAttributeList.split(",");
     let updateAttributeObject = JSON.parse(req.query.updateAttributeObject);
@@ -185,6 +183,7 @@ exports.updateMetadata = async function (req, res, next) {
         Key: {
           agentID: { S: agentID },
           agentEmail: { S: agentEmail },
+          campaignId: { S: campaignId },
         },
         UpdateExpression: updateObject.UpdateExpression, // Update expression
 
@@ -217,14 +216,14 @@ exports.updateMetadata = async function (req, res, next) {
 };
 
 exports.delete = function (req, res, next) {
-  const agentEmail = req.query.agentEmail;
+  const campaignId = req.query.campaignId;
   const agentID = req.query.agentID;
   AWS.config.update({ region: "us-west-2" });
 
   var params = {
     Key: {
-      agentEmail: {
-        S: agentEmail,
+      campaignId: {
+        S: campaignId,
       },
       agentID: {
         S: agentID,
@@ -255,6 +254,3 @@ exports.delete = function (req, res, next) {
   });
 };
 
-exports.agentAvailable = function(req,res,next){
-  
-}
