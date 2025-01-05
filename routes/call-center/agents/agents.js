@@ -4,7 +4,6 @@ const uuid = require("uuid");
 const dateUtil = require("../../../util/date");
 const logger = require("../../../util/logger");
 var AWS = require("aws-sdk");
-var ddbUpdateExpression = require("../../../util/ddbUpdateExpression");
 var s3Client = new AWS.S3();
 const agents_table_name = "Agents";
 
@@ -21,7 +20,7 @@ exports.create = async function (req, res, next) {
 
   AWS.config.update({ region: "us-west-2" });
 
-  // Create a folder inside s3 campaigns
+  // Create a folder inside S3 campaigns
   var params = {
     Bucket: "agents-directory",
     Key: agentId,
@@ -38,7 +37,7 @@ exports.create = async function (req, res, next) {
 
       const agentObject = {
         agentId: agentId,
-        agentFirstName:  agentFirstName,
+        agentFirstName: agentFirstName,
         agentLastName: agentLastName,
         dateCreated: dateCreated,
         agentEmail: agentEmail,
@@ -46,7 +45,7 @@ exports.create = async function (req, res, next) {
         agentPhoneNumber: agentPhoneNumber,
         agentCountry: agentCountry,
         agentLanguages: agentLanguages,
-        campaignId:  campaignId,
+        campaignId: campaignId,
         status: "ACTIVE",
       };
 
@@ -55,45 +54,31 @@ exports.create = async function (req, res, next) {
 
       const checkParams = {
         TableName: agents_table_name,
-        IndexName: "agentEmail-index", // Replace with your GSI name
-        KeyConditionExpression: "agentEmail = :email",
-        ExpressionAttributeValues: {
-          ":email": agentEmail,
+        Key: {
+          agentEmail: agentEmail,
+          campaignId: campaignId,
         },
       };
 
-      const result = await ddb.query(checkParams).promise();
-      if (result.Items.length > 0) {
-        return next(new Error("Email already exists: " + agentEmail + ". Instead of creating new user, associate this user to the required campaign."));
-      }
-
-
-      var params = {
-        TableName: agents_table_name,
-        Item: agentObject,
-      };
-
-      ddb.put(params, function (err, data) {
-        if (err) {
-          logger.logError(
-            "agent creation failed for agent" + agentEmail,
-            err,
-            req
-          );
-          next(new Error(err));
-        } else {
-          logger.log(
-            "agent created successfully:" +
-              agentEmail +
-              "for customer:" +
-              req.email +
-              " agentId:" +
-              agentId,
-            req
-          );
-          res.send({ agentId: agentId });
+      try {
+        const existingItem = await ddb.get(checkParams).promise();
+        if (existingItem.Item) {
+          return next(new Error("Agent already exists for this campaign."));
         }
-      });
+
+        const putParams = {
+          TableName: agents_table_name,
+          Item: agentObject,
+          ConditionExpression: "attribute_not_exists(agentEmail) AND attribute_not_exists(campaignId)",
+        };
+
+        await ddb.put(putParams).promise();
+        logger.log("Agent created successfully: " + agentEmail, req);
+        res.send({ agentId: agentId });
+      } catch (err) {
+        logger.logError("Failed to create agent: " + agentEmail, err, req);
+        next(new Error(err.message));
+      }
     }
   });
 };
@@ -105,19 +90,12 @@ exports.get = async function (req, res, next) {
     return next(new Error("Both campaignId and agentEmail are required in the query parameters."));
   }
 
-  // DynamoDB query parameters
   const params = {
     TableName: agents_table_name,
-    KeyConditionExpression: "campaignId = :campaignId", // Query items where partition key matches
-    ExpressionAttributeValues: {
-      ":campaignId": campaignId,
+    Key: {
+      agentEmail: agentEmail,
+      campaignId: campaignId,
     },
-    FilterExpression: "agentEmail = :agentEmail", // Filter for specific agent
-    ExpressionAttributeValues: {
-      ":campaignId": campaignId,
-      ":agentEmail": agentEmail,
-    },
-    Limit: 1, // Stop after finding the first match
   };
 
   AWS.config.update({ region: "us-west-2" });
@@ -125,9 +103,9 @@ exports.get = async function (req, res, next) {
   const ddb = new AWS.DynamoDB.DocumentClient();
 
   try {
-    const data = await ddb.query(params).promise();
+    const data = await ddb.get(params).promise();
 
-    if (data.Items.length === 0) {
+    if (!data.Item) {
       return next(new Error(`Agent with email ${agentEmail} not found in campaign ${campaignId}.`));
     }
 
@@ -135,7 +113,7 @@ exports.get = async function (req, res, next) {
       `Successfully retrieved agent with email ${agentEmail} for campaign ${campaignId}`,
       req
     );
-    res.send(data.Items[0]); // Return the single agent's details
+    res.send(data.Item);
   } catch (err) {
     logger.logError(
       `Failed to get agent with email ${agentEmail} for campaign ${campaignId}`,
@@ -146,7 +124,6 @@ exports.get = async function (req, res, next) {
   }
 };
 
-
 exports.list = async function (req, res, next) {
   const campaignId = req.query.campaignId;
 
@@ -154,14 +131,13 @@ exports.list = async function (req, res, next) {
     return next(new Error("campaignId is required in the query parameters."));
   }
 
-  // DynamoDB query parameters
   const params = {
     TableName: agents_table_name,
-    KeyConditionExpression: "campaignId = :campaignId", // Query items where partition key matches
+    IndexName: "campaignId-index", // Assume a GSI for campaignId
+    KeyConditionExpression: "campaignId = :campaignId",
     ExpressionAttributeValues: {
-      ":campaignId": campaignId, // Bind the campaignId value
+      ":campaignId": campaignId,
     },
-    Limit: 100, // Optional: Limit the number of items returned
   };
 
   AWS.config.update({ region: "us-west-2" });
@@ -174,7 +150,7 @@ exports.list = async function (req, res, next) {
       "Successfully returned agents for campaignId: " + campaignId,
       req
     );
-    res.send(data.Items); // Return the array of agents
+    res.send(data.Items);
   } catch (err) {
     logger.logError(
       "Failed to get agents for campaignId: " + campaignId,
@@ -194,15 +170,12 @@ exports.updateMetadata = async function (req, res, next) {
   }
 
   try {
-    // Parse the update attributes
     const updateAttributes = JSON.parse(req.query.updateAttributeObject);
 
-    // Validate input attributes (optional step, based on your needs)
     if (Object.keys(updateAttributes).length === 0) {
       return next(new Error("No attributes provided to update."));
     }
 
-    // Construct the UpdateExpression dynamically
     const updateExpressionParts = [];
     const expressionAttributeNames = {};
     const expressionAttributeValues = {};
@@ -215,10 +188,10 @@ exports.updateMetadata = async function (req, res, next) {
 
     const updateExpression = `SET ${updateExpressionParts.join(", ")}`;
 
-    // Update parameters
     const params = {
       TableName: agents_table_name,
       Key: {
+        agentEmail: agentEmail,
         campaignId: campaignId,
       },
       UpdateExpression: updateExpression,
@@ -227,7 +200,6 @@ exports.updateMetadata = async function (req, res, next) {
       ReturnValues: "UPDATED_NEW",
     };
 
-    // Use DocumentClient
     AWS.config.update({ region: "us-west-2" });
     const ddb = new AWS.DynamoDB.DocumentClient();
 
@@ -237,7 +209,7 @@ exports.updateMetadata = async function (req, res, next) {
       `Successfully updated metadata for agent with email ${agentEmail} in campaign ${campaignId}`,
       req
     );
-    res.send(updateResult.Attributes); // Return the updated attributes
+    res.send(updateResult.Attributes);
   } catch (err) {
     logger.logError(
       `Failed to update metadata for agent with email ${agentEmail} in campaign ${campaignId}`,
@@ -247,8 +219,6 @@ exports.updateMetadata = async function (req, res, next) {
     next(new Error(`Failed to update agent metadata: ${err.message}`));
   }
 };
-
-
 
 exports.delete = async function (req, res, next) {
   const campaignId = req.query.campaignId;
@@ -263,11 +233,8 @@ exports.delete = async function (req, res, next) {
   const params = {
     TableName: agents_table_name,
     Key: {
-      campaignId: campaignId, // Partition key
-    },
-    ConditionExpression: "agentEmail = :agentEmail", // Ensure only the matching agent is deleted
-    ExpressionAttributeValues: {
-      ":agentEmail": agentEmail,
+      agentEmail: agentEmail,
+      campaignId: campaignId,
     },
   };
 
@@ -281,15 +248,11 @@ exports.delete = async function (req, res, next) {
     );
     res.send({ message: `Agent ${agentEmail} successfully deleted.` });
   } catch (err) {
-    if (err.name === "ConditionalCheckFailedException") {
-      next(new Error(`Agent ${agentEmail} not found in campaign ${campaignId}.`));
-    } else {
-      logger.logError(
-        `Failed to delete agent ${agentEmail} in campaign ${campaignId}`,
-        err,
-        req
-      );
-      next(new Error(`Failed to delete agent: ${err.message}`));
-    }
+    logger.logError(
+      `Failed to delete agent ${agentEmail} in campaign ${campaignId}`,
+      err,
+      req
+    );
+    next(new Error(`Failed to delete agent: ${err.message}`));
   }
 };
