@@ -21,7 +21,7 @@
     "uuid": "^10.0.0"
   },
   "engines": {
-    "node": "18.12.1"
+    "node": "18.20.7"
   },
   "scripts": {
     "start": "node index.js",
